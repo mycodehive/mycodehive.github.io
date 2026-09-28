@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="HTML 파일을 브라우저에서 불러와 화면을 직접 클릭하며 수정하는 비주얼 HTML 편집기">
+  <title>HTML Edit · Visual HTML Editor</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <a class="back" href="../" title="Application Launcher">←</a>
+        <div>
+          <strong>HTML Edit</strong>
+          <span>Visual HTML Editor</span>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <label class="btn primary file-btn">HTML 열기
+          <input id="htmlFileInput" type="file" accept=".html,.htm,text/html" hidden>
+        </label>
+        <button id="newBtn" class="btn">새 문서</button>
+        <span class="separator"></span>
+        <button id="undoBtn" class="btn icon-btn" title="실행 취소">↶</button>
+        <button id="redoBtn" class="btn icon-btn" title="다시 실행">↷</button>
+        <span class="separator"></span>
+        <div class="device-switch" aria-label="미리보기 크기">
+          <button class="device active" data-width="100%">Desktop</button>
+          <button class="device" data-width="768px">Tablet</button>
+          <button class="device" data-width="390px">Mobile</button>
+        </div>
+        <button id="downloadBtn" class="btn success">HTML 저장</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <aside class="sidebar left-panel">
+        <section class="panel-section intro">
+          <h2>요소 추가</h2>
+          <p>선택한 요소의 안쪽 또는 뒤쪽에 새 요소를 추가합니다.</p>
+        </section>
+
+        <div class="insert-mode">
+          <button data-insert="inside" class="insert-option active">안쪽</button>
+          <button data-insert="after" class="insert-option">뒤쪽</button>
+        </div>
+
+        <section class="element-grid">
+          <button class="element-btn" data-add="section"><span>▣</span>Section</button>
+          <button class="element-btn" data-add="div"><span>□</span>Container</button>
+          <button class="element-btn" data-add="h1"><span>H1</span>제목</button>
+          <button class="element-btn" data-add="p"><span>¶</span>문단</button>
+          <button class="element-btn" data-add="span"><span>T</span>텍스트</button>
+          <button class="element-btn" data-add="a"><span>↗</span>링크</button>
+          <button class="element-btn" data-add="button"><span>▰</span>버튼</button>
+          <button class="element-btn" data-add="img"><span>▧</span>이미지</button>
+          <button class="element-btn" data-add="ul"><span>☷</span>목록</button>
+          <button class="element-btn" data-add="hr"><span>—</span>구분선</button>
+          <button class="element-btn wide" data-add="card"><span>◇</span>기본 카드</button>
+        </section>
+
+        <section class="panel-section">
+          <h2>문서</h2>
+          <div class="doc-info">
+            <div><span>파일</span><strong id="fileName">새 문서.html</strong></div>
+            <div><span>선택</span><strong id="selectedSummary">BODY</strong></div>
+          </div>
+        </section>
+
+        <section class="tips">
+          <strong>빠른 사용법</strong>
+          <p>화면의 요소를 클릭해 선택합니다.</p>
+          <p>텍스트 요소를 더블클릭하면 바로 입력할 수 있습니다.</p>
+          <p>Delete 키로 선택 요소를 삭제할 수 있습니다.</p>
+        </section>
+      </aside>
+
+      <section class="editor-area">
+        <div class="editor-toolbar">
+          <div id="breadcrumb" class="breadcrumb">html › body</div>
+          <div class="toolbar-actions">
+            <button id="editTextBtn" class="mini-btn">텍스트 편집</button>
+            <button id="duplicateBtn" class="mini-btn">복제</button>
+            <button id="moveUpBtn" class="mini-btn">↑ 위로</button>
+            <button id="moveDownBtn" class="mini-btn">↓ 아래로</button>
+            <button id="deleteBtn" class="mini-btn danger">삭제</button>
+          </div>
+        </div>
+
+        <div id="stage" class="stage">
+          <div id="frameShell" class="frame-shell">
+            <iframe
+              id="previewFrame"
+              title="HTML 미리보기"
+              sandbox="allow-same-origin"
+            ></iframe>
+          </div>
+        </div>
+
+        <div class="statusbar">
+          <span id="statusText">HTML 파일을 열거나 새 문서에서 시작하세요.</span>
+          <span id="changeState">저장됨</span>
+        </div>
+      </section>
+
+      <aside class="sidebar inspector">
+        <section class="panel-section inspector-head">
+          <div>
+            <h2>속성</h2>
+            <p id="elementPath">body</p>
+          </div>
+          <span id="tagBadge" class="tag-badge">BODY</span>
+        </section>
+
+        <div class="inspector-scroll">
+          <section id="textSection" class="control-section">
+            <h3>내용</h3>
+            <label>텍스트
+              <textarea id="textContent" rows="4" placeholder="선택 요소의 텍스트"></textarea>
+            </label>
+          </section>
+
+          <section class="control-section">
+            <h3>HTML 속성</h3>
+            <label>ID<input id="attrId" type="text" placeholder="element-id"></label>
+            <label>Class<input id="attrClass" type="text" placeholder="class-a class-b"></label>
+            <label id="hrefRow">링크 URL<input id="attrHref" type="text" placeholder="https://..."></label>
+            <label id="srcRow">이미지 URL<input id="attrSrc" type="text" placeholder="https://..."></label>
+            <label id="altRow">대체 텍스트<input id="attrAlt" type="text" placeholder="이미지 설명"></label>
+            <label id="imageUploadRow" class="image-upload">이미지 파일
+              <input id="imageFileInput" type="file" accept="image/*">
+              <small>이미지는 HTML 안에 Data URL로 포함됩니다.</small>
+            </label>
+          </section>
+
+          <section class="control-section">
+            <h3>크기 · 간격</h3>
+            <div class="two-col">
+              <label>Width<input id="styleWidth" type="text" placeholder="auto / 100% / 320px"></label>
+              <label>Height<input id="styleHeight" type="text" placeholder="auto"></label>
+              <label>Margin<input id="styleMargin" type="text" placeholder="0 / 16px auto"></label>
+              <label>Padding<input id="stylePadding" type="text" placeholder="16px"></label>
+            </div>
+          </section>
+
+          <section class="control-section">
+            <h3>글자 · 색상</h3>
+            <div class="two-col">
+              <label>글자 크기<input id="styleFontSize" type="text" placeholder="16px"></label>
+              <label>굵기
+                <select id="styleFontWeight">
+                  <option value="">기본</option>
+                  <option value="400">Regular</option>
+                  <option value="500">Medium</option>
+                  <option value="600">Semi Bold</option>
+                  <option value="700">Bold</option>
+                  <option value="800">Extra Bold</option>
+                </select>
+              </label>
+              <label>글자색<input id="styleColor" type="text" placeholder="#111827"></label>
+              <label>배경색<input id="styleBackground" type="text" placeholder="#ffffff / transparent"></label>
+            </div>
+            <label>정렬
+              <select id="styleTextAlign">
+                <option value="">기본</option>
+                <option value="left">왼쪽</option>
+                <option value="center">가운데</option>
+                <option value="right">오른쪽</option>
+                <option value="justify">양쪽</option>
+              </select>
+            </label>
+          </section>
+
+          <section class="control-section">
+            <h3>테두리</h3>
+            <div class="two-col">
+              <label>Border<input id="styleBorder" type="text" placeholder="1px solid #ddd"></label>
+              <label>Radius<input id="styleRadius" type="text" placeholder="8px"></label>
+            </div>
+          </section>
+
+          <section class="control-section">
+            <h3>고급</h3>
+            <label>Inline Style
+              <textarea id="rawStyle" rows="5" placeholder="color:red; padding:10px;"></textarea>
+            </label>
+            <button id="applyRawStyleBtn" class="full-btn">Inline Style 적용</button>
+          </section>
+        </div>
+      </aside>
+    </main>
+
+    <div id="toastRoot" class="toast-root"></div>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>

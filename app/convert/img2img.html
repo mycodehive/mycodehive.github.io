@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebP to PNG Converter</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+            font-family: Arial, sans-serif;
+        }
+        input, button {
+            margin: 10px;
+            padding: 10px;
+            font-size: 16px;
+        }
+        .download-links {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        img {
+            margin-top: 20px;
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>WebP to PNG Converter</h1>
+    <input type="file" id="webpInput" accept="image/webp" multiple>
+    <button onclick="convertWebPToPNG()">Convert to PNG</button>
+    <div id="downloadLinks" class="download-links"></div>
+
+    <script>
+        function convertWebPToPNG() {
+            const input = document.getElementById('webpInput');
+            const downloadLinks = document.getElementById('downloadLinks');
+            downloadLinks.innerHTML = '';
+            
+            if (!input.files.length) {
+                alert('Please select at least one WebP file.');
+                return;
+            }
+            
+            Array.from(input.files).forEach(file => {
+                const reader = new FileReader();
+                
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0);
+                        
+                        canvas.toBlob(function(blob) {
+                            const url = URL.createObjectURL(blob);
+                            const downloadLink = document.createElement('a');
+                            downloadLink.href = url;
+                            downloadLink.download = file.name.replace('.webp', '.png');
+                            downloadLink.innerText = `Download ${file.name.replace('.webp', '.png')}`;
+                            downloadLinks.appendChild(downloadLink);
+                            downloadLinks.appendChild(document.createElement('br'));
+                        }, 'image/png');
+                    };
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+    </script>
+</body>
+</html>

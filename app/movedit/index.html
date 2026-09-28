@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="브라우저에서 동영상을 자르고, 이어붙이고, 이미지와 자막을 올려 MP4로 렌더링하는 가벼운 비파괴 편집기">
+  <meta name="theme-color" content="#111318">
+  <title>MovEdit · Simple Video Editor</title>
+  <script type="module" crossorigin src="./bundle/index-IGWBwacV.js"></script>
+  <link rel="stylesheet" crossorigin href="./bundle/index-B9f2KhJm.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <a class="back-link" href="../" title="Application Launcher로 돌아가기">←</a>
+        <div>
+          <div class="brand-title">MovEdit</div>
+          <div class="brand-sub">Simple Video Editor</div>
+        </div>
+      </div>
+      <div class="top-actions">
+        <input id="projectName" class="project-name" value="새 프로젝트" aria-label="프로젝트명">
+        <label class="aspect-control" title="프로젝트 화면 비율">
+          <span>Canvas</span>
+          <select id="aspectRatioSelect" aria-label="캔버스 화면 비율">
+            <option value="16:9">16:9 가로</option>
+            <option value="9:16">9:16 세로</option>
+          </select>
+        </label>
+        <button id="undoBtn" class="tool-btn" title="실행 취소 (Ctrl/Cmd+Z)">↶ Undo</button>
+        <button id="redoBtn" class="tool-btn" title="다시 실행 (Ctrl/Cmd+Shift+Z)">↷ Redo</button>
+        <button id="saveProjectBtn" class="tool-btn">프로젝트 저장</button>
+        <label class="tool-btn file-label">불러오기<input id="projectFileInput" type="file" accept=".json,application/json" hidden></label>
+        <button id="renderBtn" class="primary-btn">Render MP4</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <aside class="panel media-panel">
+        <div class="panel-head">
+          <div>
+            <h2>미디어</h2>
+            <p>파일은 브라우저 안에서만 사용됩니다.</p>
+          </div>
+          <label class="small-btn file-label">+ 가져오기<input id="mediaInput" type="file" multiple accept="video/*,image/*" hidden></label>
+        </div>
+        <div id="dropZone" class="drop-zone">
+          <div class="drop-icon">＋</div>
+          <strong>영상·이미지 가져오기</strong>
+          <span>클릭하거나 파일을 여기로 끌어오세요.</span>
+        </div>
+        <div id="mediaList" class="media-list"></div>
+        <div class="engine-card">
+          <div class="engine-row"><span>FFmpeg</span><strong id="engineStatus">Not loaded</strong></div>
+          <p id="engineHint">최초 렌더링 시 엔진을 불러옵니다.</p>
+        </div>
+      </aside>
+
+      <section class="editor-center">
+        <div class="preview-panel">
+          <div class="preview-toolbar">
+            <div class="timecode"><span id="currentTime">00:00:00.000</span><span class="time-sep">/</span><span id="totalTime">00:00:00.000</span></div>
+            <div class="preview-tools">
+              <button id="prevBtn" class="icon-btn" title="-1초">−1s</button>
+              <button id="playBtn" class="play-btn" title="재생/일시정지 (Space)">▶</button>
+              <button id="nextBtn" class="icon-btn" title="+1초">+1s</button>
+              <button id="splitBtn" class="icon-btn" title="Playhead에서 분할 (S)">✂ Split</button>
+            </div>
+          </div>
+          <div id="previewStage" class="preview-stage">
+            <canvas id="previewCanvas" width="960" height="540"></canvas>
+            <div id="previewEmpty" class="preview-empty">
+              <div class="preview-empty-icon">▶</div>
+              <strong>미디어를 가져오세요</strong>
+              <span>가져온 영상은 타임라인에 배치해 편집할 수 있습니다.</span>
+            </div>
+          </div>
+          <div class="scrub-row">
+            <input id="previewScrub" type="range" min="0" max="1000" value="0">
+            <label>Volume <input id="masterVolume" type="range" min="0" max="1" value="1" step="0.05"></label>
+          </div>
+        </div>
+      </section>
+
+      <aside class="panel inspector-panel">
+        <div class="panel-head">
+          <div><h2>속성</h2><p id="selectionLabel">선택된 항목 없음</p></div>
+        </div>
+        <div id="inspectorEmpty" class="empty-inspector">타임라인의 Clip 또는 자막을 선택하면 편집할 수 있습니다.</div>
+        <div id="clipInspector" class="inspector-form hidden">
+          <div class="form-grid">
+            <label>시작 <input id="clipStart" type="number" step="0.01" min="0"></label>
+            <label>길이 <input id="clipDuration" type="number" step="0.01" min="0.05"></label>
+            <label>Source In <input id="clipSourceIn" type="number" step="0.01" min="0"></label>
+            <label>Source Out <input id="clipSourceOut" type="number" step="0.01" min="0"></label>
+            <label>X <input id="clipX" type="number" step="1"></label>
+            <label>Y <input id="clipY" type="number" step="1"></label>
+            <label>Width <input id="clipWidth" type="number" step="1" min="1"></label>
+            <label>Height <input id="clipHeight" type="number" step="1" min="1"></label>
+            <label>Opacity <input id="clipOpacity" type="range" min="0" max="1" step="0.05"></label>
+            <label>Volume <input id="clipVolume" type="range" min="0" max="1" step="0.05"></label>
+          </div>
+          <div class="inspector-section">
+            <h3>다음 Clip 전환</h3>
+            <label>Transition
+              <select id="transitionType">
+                <option value="none">None</option>
+                <option value="fade">Fade</option>
+                <option value="crossfade">Cross Fade</option>
+                <option value="slideleft">Slide Left</option>
+                <option value="slideright">Slide Right</option>
+                <option value="wipeleft">Wipe Left</option>
+                <option value="wiperight">Wipe Right</option>
+              </select>
+            </label>
+            <label>Duration <input id="transitionDuration" type="number" min="0.1" max="2" step="0.05" value="0.5"></label>
+          </div>
+          <button id="deleteClipBtn" class="danger-btn">선택 Clip 삭제</button>
+        </div>
+
+        <div id="subtitleInspector" class="inspector-form hidden">
+          <label>자막<textarea id="subtitleText" rows="4"></textarea></label>
+          <div class="form-grid">
+            <label>시작 <input id="subtitleStart" type="number" step="0.01" min="0"></label>
+            <label>종료 <input id="subtitleEnd" type="number" step="0.01" min="0"></label>
+            <label>글자 크기 <input id="subtitleFontSize" type="number" min="12" max="120"></label>
+            <label>위치
+              <select id="subtitlePosition">
+                <option value="top">Top</option>
+                <option value="center">Center</option>
+                <option value="bottom">Bottom</option>
+              </select>
+            </label>
+            <label>글자색 <input id="subtitleColor" type="color"></label>
+            <label>배경색 <input id="subtitleBgColor" type="color"></label>
+          </div>
+          <label>배경 투명도 <input id="subtitleBgOpacity" type="range" min="0" max="1" step="0.05"></label>
+          <button id="deleteSubtitleBtn" class="danger-btn">자막 삭제</button>
+        </div>
+      </aside>
+
+      <div id="leftPanelResizer" class="workspace-resizer workspace-resizer-left" title="좌측 영역 크기 조절"></div>
+      <div id="rightPanelResizer" class="workspace-resizer workspace-resizer-right" title="우측 영역 크기 조절"></div>
+      <div id="timelinePanelResizer" class="workspace-resizer workspace-resizer-bottom" title="타임라인 높이 조절"></div>
+
+      <section class="timeline-panel">
+        <div class="timeline-head">
+          <div class="timeline-actions">
+            <button id="addSubtitleBtn" class="small-btn">+ 자막</button>
+            <button id="deleteBtn" class="small-btn">삭제</button>
+            <span class="divider"></span>
+            <span class="zoom-label">Zoom</span>
+            <select id="zoomSelect">
+              <option value="25">25%</option>
+              <option value="50">50%</option>
+              <option value="100" selected>100%</option>
+              <option value="200">200%</option>
+            </select>
+          </div>
+          <div class="timeline-note">Drag 이동 · 양쪽 Handle로 Trim · S 분할</div>
+        </div>
+        <div id="timelineScroll" class="timeline-scroll">
+          <div id="timeline" class="timeline">
+            <div id="ruler" class="ruler"></div>
+            <div id="playhead" class="playhead"><span></span></div>
+            <div id="tracks" class="tracks"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toastRoot" class="toast-root"></div>
+
+  <div id="renderModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="renderTitle">
+    <div class="modal-card">
+      <div class="modal-icon">◫</div>
+      <h2 id="renderTitle">Rendering Video</h2>
+      <p id="renderMessage">렌더링 준비 중…</p>
+      <div class="progress-track"><span id="renderProgress"></span></div>
+      <div id="renderPercent" class="render-percent">처리 중</div>
+      <div class="modal-actions">
+        <button id="cancelRenderBtn" class="danger-outline-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="resultModal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-card result-card">
+      <h2>Render Complete</h2>
+      <video id="resultVideo" controls></video>
+      <div class="modal-actions">
+        <button id="closeResultBtn" class="tool-btn">닫기</button>
+        <a id="downloadResultBtn" class="primary-btn" download="movedit-output.mp4">MP4 저장</a>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

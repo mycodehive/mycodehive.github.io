@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>정적 마인드맵</title>
+  <!-- jsMind CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/jsmind@0.4.8/style/jsmind.css" />
+  <style>
+    body { font-family: sans-serif; margin: 0; padding: 0; }
+    #jsmind_container { width: 100%; height: 85vh; background-color: #f0f0f0; }
+    #toolbar { padding: 10px; background: #fff; border-bottom: 1px solid #ddd; }
+    #toolbar button { margin-right: 5px; }
+  </style>
+</head>
+<body>
+  <div id="toolbar">
+    <button id="btn_add_child">자식 노드 추가</button>
+    <button id="btn_add_sibling">형제 노드 추가</button>
+    <button id="btn_del_node">노드 삭제</button>
+    <button id="btn_save">저장</button>
+    <button id="btn_load">불러오기</button>
+    <button id="btn_export">내보내기</button>
+    <button id="btn_import">가져오기</button>
+    <input type="file" id="file_input" style="display:none" />
+  </div>
+  <div id="jsmind_container"></div>
+
+  <!-- jsMind library -->
+  <script src="https://unpkg.com/jsmind@0.4.8/js/jsmind.js"></script>
+  <script>
+    // 초기 마인드맵 데이터
+    const mind_data = {
+      meta: { name: "demo", author: "you", version: "1.0" },
+      format: "node_tree",
+      data: {
+        id: "root",
+        topic: "중심 아이디어",
+        children: []
+      }
+    };
+
+    // 옵션
+    const options = {
+      container: 'jsmind_container',
+      editable: true,
+      view: { engine: 'canvas' }
+    };
+
+    // 인스턴스 생성
+    let jm = jsMind.show(options, mind_data);
+
+    // 노드 추가 헬퍼
+    function addChild() {
+      const node = jm.get_selected_node();
+      const parent_id = node ? node.id : 'root';
+      const new_id = parent_id + '_' + Date.now();
+      jm.add_node(parent_id, new_id, '새 노드');
+      jm.select_node(new_id);
+    }
+    function addSibling() {
+      const node = jm.get_selected_node();
+      if (!node || node.id === 'root') {
+        alert('루트의 형제 노드는 생성할 수 없습니다.');
+        return;
+      }
+      const parent_id = node.parent;
+      const new_id = parent_id + '_' + Date.now();
+      jm.add_node(parent_id, new_id, '새 노드');
+      jm.select_node(new_id);
+    }
+    function deleteNode() {
+      const node = jm.get_selected_node();
+      if (!node || node.id === 'root') {
+        alert('루트 노드는 삭제할 수 없습니다.');
+        return;
+      }
+      jm.remove_node(node.id);
+      jm.select_node('root');
+    }
+
+    // 이벤트 바인딩
+    document.getElementById('btn_add_child').addEventListener('click', addChild);
+    document.getElementById('btn_add_sibling').addEventListener('click', addSibling);
+    document.getElementById('btn_del_node').addEventListener('click', deleteNode);
+
+    // 저장/불러오기/내보내기/가져오기
+    document.getElementById('btn_save').addEventListener('click', () => {
+      localStorage.setItem('mymind', JSON.stringify(jm.get_data()));
+      alert('저장 완료');
+    });
+    document.getElementById('btn_load').addEventListener('click', () => {
+      const json = localStorage.getItem('mymind');
+      if (json) {
+        jm = jsMind.show(options, JSON.parse(json));
+        alert('불러오기 완료');
+      } else alert('저장된 데이터가 없습니다');
+    });
+    document.getElementById('btn_export').addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify(jm.get_data())], { type: 'application/json' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+      a.download = 'mindmap.json'; a.click();
+    });
+    document.getElementById('btn_import').addEventListener('click', () => {
+      document.getElementById('file_input').click();
+    });
+    document.getElementById('file_input').addEventListener('change', function() {
+      const file = this.files[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        jm = jsMind.show(options, JSON.parse(e.target.result));
+      };
+      reader.readAsText(file);
+    });
+    // ===== [캔버스 드래그 이동(pan) 기능] : 컨테이너 전체 이동 =====
+    const container = document.getElementById('jsmind_container');
+    let isDragging = false;
+    let startX = 0, startY = 0;
+    let originX = 0, originY = 0;
+
+    function getCurrentTranslate() {
+    // 현재 transform 값 읽기 (컨테이너 기준)
+    const transform = container.style.transform || '';
+    const match = transform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/);
+    if (match) {
+        return { x: parseFloat(match[1]), y: parseFloat(match[2]) };
+    }
+    return { x: 0, y: 0 };
+    }
+
+    container.addEventListener('mousedown', function(e) {
+    // 노드 클릭 시, 이동 방지 (노드가 div라면)
+    if (e.target !== container) return;
+    if (e.button !== 0) return;
+    isDragging = true;
+    const { x, y } = getCurrentTranslate();
+    originX = x;
+    originY = y;
+    startX = e.clientX;
+    startY = e.clientY;
+    container.style.cursor = 'grabbing';
+    });
+
+    window.addEventListener('mousemove', function(e) {
+    if (!isDragging) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    container.style.transform = `translate(${originX + dx}px, ${originY + dy}px)`;
+    });
+
+    window.addEventListener('mouseup', function(e) {
+    if (isDragging) {
+        isDragging = false;
+        container.style.cursor = 'default';
+    }
+    });
+
+    container.addEventListener('mouseleave', function(e) {
+    if (isDragging) {
+        isDragging = false;
+        container.style.cursor = 'default';
+    }
+    });
+
+    // 초기 위치 설정 (중앙에서 시작, 필요에 따라 0,0으로)
+    container.style.transform = 'translate(0px, 0px)';
+
+  </script>
+</body>
+</html>

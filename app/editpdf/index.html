@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#111827">
+  <meta name="description" content="브라우저에서 PDF를 열고 텍스트, 이미지, 서명, 도형, 페이지를 편집해 다시 저장하는 로컬 PDF 편집기">
+  <title>EditPDF · Browser PDF Editor</title>
+  <link rel="stylesheet" href="./style.css">
+  <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand-group">
+        <a href="../" class="back-link" aria-label="Application Launcher">←</a>
+        <div class="brand">
+          <strong>EditPDF</strong>
+          <span>Browser PDF Editor</span>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <label class="top-btn primary">
+          PDF 열기
+          <input id="openPdfInput" type="file" accept="application/pdf,.pdf" hidden>
+        </label>
+        <label class="top-btn">
+          PDF 추가
+          <input id="appendPdfInput" type="file" accept="application/pdf,.pdf" hidden multiple>
+        </label>
+        <span class="top-separator"></span>
+        <button id="undoBtn" class="top-btn icon-btn" title="실행 취소">↶</button>
+        <button id="redoBtn" class="top-btn icon-btn" title="다시 실행">↷</button>
+        <span class="top-separator"></span>
+        <button id="savePdfBtn" class="top-btn success">PDF 저장</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <aside class="sidebar pages-panel">
+        <div class="panel-head">
+          <div>
+            <h2>페이지</h2>
+            <p id="pageCountLabel">PDF를 열어주세요</p>
+          </div>
+          <button id="addBlankPageBtn" class="small-icon-btn" title="빈 페이지 추가">＋</button>
+        </div>
+
+        <div class="page-actions">
+          <button id="rotateLeftBtn" title="왼쪽 회전">↶ 90°</button>
+          <button id="rotateRightBtn" title="오른쪽 회전">↷ 90°</button>
+          <button id="duplicatePageBtn" title="페이지 복제">복제</button>
+          <button id="deletePageBtn" class="danger" title="페이지 삭제">삭제</button>
+        </div>
+
+        <div id="thumbnailList" class="thumbnail-list"></div>
+
+        <div class="privacy-note">
+          <strong>로컬 처리</strong>
+          <p>PDF 파일은 이 브라우저 안에서만 열고 편집합니다. 편집 파일 자체를 서버로 업로드하지 않습니다.</p>
+        </div>
+      </aside>
+
+      <section class="editor">
+        <div class="toolbar">
+          <div class="tool-group" id="toolGroup">
+            <button class="tool active" data-tool="select" title="선택/이동">
+              <span>↖</span><small>선택</small>
+            </button>
+            <button class="tool" data-tool="text" title="텍스트 추가">
+              <span>T</span><small>텍스트</small>
+            </button>
+            <button class="tool" data-tool="editText" title="기존 텍스트 수정">
+              <span>Tx</span><small>글자수정</small>
+            </button>
+            <button class="tool" data-tool="draw" title="자유 그리기">
+              <span>✎</span><small>그리기</small>
+            </button>
+            <button class="tool" data-tool="highlight" title="형광펜">
+              <span>▰</span><small>형광펜</small>
+            </button>
+            <button class="tool" data-tool="rect" title="사각형">
+              <span>□</span><small>도형</small>
+            </button>
+            <label class="tool" title="이미지 넣기">
+              <span>▧</span><small>이미지</small>
+              <input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+            </label>
+            <button class="tool" id="signatureBtn" title="서명 추가">
+              <span>⌁</span><small>서명</small>
+            </button>
+          </div>
+
+          <div class="toolbar-right">
+            <button id="zoomOutBtn" class="zoom-btn">−</button>
+            <span id="zoomLabel" class="zoom-label">100%</span>
+            <button id="zoomInBtn" class="zoom-btn">＋</button>
+            <button id="fitWidthBtn" class="fit-btn">폭 맞춤</button>
+          </div>
+        </div>
+
+        <div id="stage" class="stage">
+          <div id="emptyState" class="empty-state">
+            <div class="empty-icon">PDF</div>
+            <h1>PDF를 열어 편집하세요</h1>
+            <p>텍스트, 이미지, 서명, 형광펜, 도형을 추가하고 페이지를 재정렬·회전·삭제한 뒤 새 PDF로 저장할 수 있습니다.</p>
+            <label class="empty-open-btn">
+              PDF 파일 선택
+              <input id="emptyPdfInput" type="file" accept="application/pdf,.pdf" hidden>
+            </label>
+          </div>
+
+          <div id="pageViewport" class="page-viewport hidden">
+            <div id="pageWrap" class="page-wrap">
+              <canvas id="pdfCanvas"></canvas>
+              <div id="textHitLayer" class="text-hit-layer"></div>
+              <div id="overlayLayer" class="overlay-layer"></div>
+              <svg id="drawPreview" class="draw-preview" xmlns="http://www.w3.org/2000/svg"></svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="statusbar">
+          <span id="statusText">준비</span>
+          <span id="pageStatus">—</span>
+        </div>
+      </section>
+
+      <aside class="sidebar inspector">
+        <div class="panel-head inspector-head">
+          <div>
+            <h2>속성</h2>
+            <p id="selectionLabel">선택된 개체 없음</p>
+          </div>
+          <button id="deleteOverlayBtn" class="small-icon-btn danger hidden" title="선택 개체 삭제">⌫</button>
+        </div>
+
+        <div id="noSelectionPanel" class="no-selection">
+          <strong>편집 도구를 선택하세요</strong>
+          <p>페이지를 클릭해 텍스트, 도형, 이미지 등을 추가하거나 기존 개체를 선택해 속성을 바꿀 수 있습니다.</p>
+        </div>
+
+        <div id="overlayInspector" class="inspector-scroll hidden">
+          <section id="textInspectorSection" class="control-section">
+            <h3>텍스트</h3>
+            <label>내용
+              <textarea id="textValue" rows="4"></textarea>
+            </label>
+            <div class="two-col">
+              <label>글자 크기
+                <input id="fontSizeInput" type="number" min="6" max="144" step="1">
+              </label>
+              <label>정렬
+                <select id="textAlignInput">
+                  <option value="left">왼쪽</option>
+                  <option value="center">가운데</option>
+                  <option value="right">오른쪽</option>
+                </select>
+              </label>
+            </div>
+          </section>
+
+          <section class="control-section">
+            <h3>스타일</h3>
+            <div class="color-grid">
+              <label>색상<input id="colorInput" type="color" value="#111827"></label>
+              <label>배경<input id="fillInput" type="color" value="#ffffff"></label>
+            </div>
+            <label>투명도
+              <div class="range-row">
+                <input id="opacityInput" type="range" min="0.05" max="1" step="0.05" value="1">
+                <span id="opacityValue">100%</span>
+              </div>
+            </label>
+            <label id="strokeWidthRow">선 두께
+              <div class="range-row">
+                <input id="strokeWidthInput" type="range" min="1" max="16" step="1" value="3">
+                <span id="strokeWidthValue">3px</span>
+              </div>
+            </label>
+          </section>
+
+          <section class="control-section">
+            <h3>배치</h3>
+            <div class="four-grid">
+              <label>X<input id="posXInput" type="number" step="1"></label>
+              <label>Y<input id="posYInput" type="number" step="1"></label>
+              <label>W<input id="widthInput" type="number" min="1" step="1"></label>
+              <label>H<input id="heightInput" type="number" min="1" step="1"></label>
+            </div>
+            <div class="arrange-row">
+              <button id="bringFrontBtn">맨 앞으로</button>
+              <button id="sendBackBtn">맨 뒤로</button>
+            </div>
+          </section>
+
+          <section id="replaceHintSection" class="control-section hint-section hidden">
+            <h3>기존 글자 수정</h3>
+            <p>원문을 직접 재배치하는 대신 해당 위치를 배경색으로 덮고 새 글자를 올립니다. 배경색이 흰색이 아니면 배경색을 맞춰주세요.</p>
+          </section>
+        </div>
+
+        <div class="shortcuts">
+          <strong>단축키</strong>
+          <p><kbd>V</kbd> 선택 · <kbd>T</kbd> 텍스트 · <kbd>D</kbd> 그리기</p>
+          <p><kbd>Del</kbd> 삭제 · <kbd>Ctrl/Cmd + Z</kbd> 실행 취소</p>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <div id="signatureModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="signatureTitle">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <h2 id="signatureTitle">서명 만들기</h2>
+          <p>마우스나 터치로 서명한 뒤 페이지에 추가하세요.</p>
+        </div>
+        <button id="closeSignatureBtn">×</button>
+      </div>
+      <canvas id="signatureCanvas" width="700" height="260"></canvas>
+      <div class="signature-actions">
+        <button id="clearSignatureBtn">지우기</button>
+        <button id="cancelSignatureBtn">취소</button>
+        <button id="addSignatureBtn" class="primary">서명 추가</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastRoot" class="toast-root"></div>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

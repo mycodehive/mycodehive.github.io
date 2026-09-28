@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b1020">
+  <meta name="description" content="3D 주사위를 역동적인 모션으로 굴리는 브라우저 Dice Roller">
+  <title>Dice Roller 3D</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <div class="ambient ambient-a"></div>
+    <div class="ambient ambient-b"></div>
+
+    <header class="topbar">
+      <a class="back-link" href="../../" aria-label="Application Launcher로 돌아가기">←</a>
+      <div class="brand">
+        <span class="brand-mark">◆</span>
+        <div>
+          <strong>Dice Roller</strong>
+          <small>3D Motion Edition</small>
+        </div>
+      </div>
+      <button id="soundToggle" class="ghost-btn" type="button" aria-pressed="true" title="효과음 켜기/끄기">Sound On</button>
+    </header>
+
+    <main class="main">
+      <section class="hero-copy" aria-live="polite">
+        <p class="eyebrow">ROLL · BOUNCE · LAND</p>
+        <div class="score-row">
+          <div>
+            <span class="score-label">TOTAL</span>
+            <strong id="diceSum" class="score">—</strong>
+          </div>
+          <div id="resultChips" class="result-chips" aria-label="개별 주사위 결과"></div>
+        </div>
+        <h1 id="headline">주사위를 굴려보세요</h1>
+        <p id="subline">화면을 누르거나 아래 버튼을 눌러 시작하세요.</p>
+      </section>
+
+      <section id="diceStage" class="dice-stage" aria-label="3D 주사위 영역">
+        <div class="stage-glow"></div>
+        <div id="diceContainer" class="dice-container"></div>
+        <div class="floor-grid"></div>
+      </section>
+
+      <section class="control-dock">
+        <div class="counter" aria-label="주사위 개수">
+          <button id="decreaseDice" type="button" aria-label="주사위 줄이기">−</button>
+          <div>
+            <span>주사위</span>
+            <strong id="diceCount">1</strong>
+          </div>
+          <button id="increaseDice" type="button" aria-label="주사위 늘리기">＋</button>
+        </div>
+
+        <button id="rollButton" class="roll-button" type="button">
+          <span class="roll-icon">↻</span>
+          <span>ROLL DICE</span>
+          <kbd>SPACE</kbd>
+        </button>
+
+        <div class="history-box">
+          <span>최근 결과</span>
+          <div id="history" class="history" aria-label="최근 합계"></div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>1–6 dice</span>
+      <span>Click stage · Press Space</span>
+    </footer>
+  </div>
+
+  <script src="./script.js"></script>
+</body>
+</html>

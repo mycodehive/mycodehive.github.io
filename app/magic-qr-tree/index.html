@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Magic QR Tree</title>
+<style>
+:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#f7f3ee;background:#151816;color-scheme:dark}*{box-sizing:border-box}html,body,#app{margin:0;width:100%;height:100%;overflow:hidden}body{background:radial-gradient(circle at 50% 35%,#3f4d42 0,#1c211e 48%,#0d0f0e 100%)}#scene{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}.vignette{pointer-events:none;position:absolute;inset:0;background:radial-gradient(circle at center,transparent 30%,rgba(0,0,0,.55) 100%)}.glass{backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);background:rgba(25,29,26,.48);border:1px solid rgba(255,255,255,.12);box-shadow:0 18px 50px rgba(0,0,0,.22)}.topbar{position:absolute;left:24px;right:24px;top:20px;height:72px;border-radius:22px;padding:12px 14px 12px 18px;display:flex;align-items:center;justify-content:space-between}.brand{display:flex;align-items:center;gap:12px}.brand-mark{width:40px;height:40px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(145deg,#f7e6a5,#cb9277);color:#20241f;font-size:22px}.brand strong{display:block;font-size:16px;letter-spacing:.1px}.brand small{display:block;margin-top:2px;color:rgba(255,255,255,.58);font-size:12px}.icon-btn,.primary,.segmented button,.scan-pill{border:0;color:inherit;cursor:pointer}.icon-btn{width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.09);font-size:20px}.composer{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);width:min(680px,calc(100vw - 34px));padding:18px;border-radius:26px}.composer.share-hidden{display:none}.composer label{font-size:13px;color:rgba(255,255,255,.7);display:block;margin:0 0 9px 2px}.input-row{display:flex;gap:9px}.input-row input{flex:1;min-width:0;height:48px;border-radius:15px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.22);color:#fff;padding:0 15px;font-size:15px;outline:none}.input-row input:focus{border-color:rgba(255,255,255,.32);box-shadow:0 0 0 4px rgba(255,255,255,.05)}.primary{height:48px;padding:0 22px;border-radius:15px;background:linear-gradient(135deg,#f0dbc3,#cf9b7f);color:#2a241f;font-weight:800}.segmented{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:rgba(0,0,0,.18);padding:5px;border-radius:15px;margin-top:12px}.segmented button{height:38px;border-radius:11px;background:transparent;color:rgba(255,255,255,.55);font-weight:650}.segmented button.active{background:rgba(255,255,255,.12);color:#fff}.hint{font-size:11px;color:rgba(255,255,255,.42);text-align:center;margin-top:10px}.status{position:absolute;left:50%;top:112px;transform:translateX(-50%);padding:8px 13px;border-radius:999px;font-size:12px;color:rgba(255,255,255,.72);opacity:0;transition:.25s}.status.show{opacity:1}.scan-pill{position:absolute;right:24px;bottom:27px;border-radius:999px;padding:11px 16px;font-size:12px;color:rgba(255,255,255,.8)}@media(max-width:760px){.topbar{left:14px;right:14px;top:14px}.brand small{display:none}.composer{bottom:14px}.scan-pill{display:none}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<div id="app">
+  <canvas id="scene"></canvas>
+  <div class="vignette"></div>
+
+  <header class="topbar glass">
+    <div class="brand">
+      <div class="brand-mark">✦</div>
+      <div>
+        <a href="https://github.writeaday.click/app/magic-qr-tree/" targer="_blank"><strong>Magic QR Tree</strong></a>
+        <small>Turn a link into a living 3D QR landscape</small>
+      </div>
+    </div>
+    <button id="shareBtn" class="icon-btn" title="Copy share link">↗</button>
+  </header>
+
+  <section class="composer glass">
+    <label for="urlInput">Grow a tree from any URL</label>
+    <div class="input-row">
+      <input id="urlInput" type="url" value="https://openai.com/" spellcheck="false" />
+      <button id="growBtn" class="primary">Grow</button>
+    </div>
+    <div class="segmented" id="seasonControls">
+      <button data-season="spring" class="active">Spring</button>
+      <button data-season="summer">Summer</button>
+      <button data-season="autumn">Autumn</button>
+    </div>
+    <div class="hint">Drag to orbit · Scroll to zoom · Tap the tree to reveal the QR</div>
+  </section>
+
+  <div class="status glass" id="status">Growing…</div>
+  <button class="scan-pill glass" id="scanBtn">Tap tree to scan</button>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const canvas = document.querySelector('#scene');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x141815, .032);
+
+const camera = new THREE.PerspectiveCamera(42, innerWidth/innerHeight, .1, 200);
+camera.position.set(16,16,19);
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+controls.minDistance = 10;
+controls.maxDistance = 34;
+controls.target.set(0,2.7,0);
+controls.maxPolarAngle = Math.PI * .49;
+
+scene.add(new THREE.HemisphereLight(0xfff5e7,0x33423a,2.6));
+const key = new THREE.DirectionalLight(0xffe5c7,4.0);
+key.position.set(8,16,9);
+key.castShadow=true;
+scene.add(key);
+const rim = new THREE.DirectionalLight(0x98b8ff,1.2);
+rim.position.set(-12,7,-10);
+scene.add(rim);
+
+const root = new THREE.Group();
+scene.add(root);
+const qrGroup = new THREE.Group();
+const treeGroup = new THREE.Group();
+const decoGroup = new THREE.Group();
+root.add(qrGroup, treeGroup, decoGroup);
+
+const palettes = {
+  spring:{ground:0xd8c8b3,dark:0x4c332c,trunk:0x5b392e,leaf:0xe7a7b4,leaf2:0xffd2d9,accent:0xffedf1,bg:0x27302b},
+  summer:{ground:0xc7cdb4,dark:0x324c36,trunk:0x60452f,leaf:0x4f7a45,leaf2:0x86a85f,accent:0xc3df91,bg:0x223128},
+  autumn:{ground:0xd0c2a3,dark:0x523728,trunk:0x5a3929,leaf:0xc76d33,leaf2:0xe6a54d,accent:0xf4c66b,bg:0x30251e}
+};
+
+let season='spring', matrix=[], qrSize=29, isScan=false;
+let animation={t:1, from:null, to:null, start:0, duration:850};
+
+function rand(a,b){return a+Math.random()*(b-a)}
+
+function disposeGroup(g){
+  while(g.children.length){
+    const c=g.children.pop();
+    c.geometry?.dispose?.();
+    if(c.material){
+      (Array.isArray(c.material)?c.material:[c.material]).forEach(m=>m.dispose?.());
+    }
+  }
+}
+
+function roundedBoxGeometry(w,h,d){
+  return new THREE.BoxGeometry(w,h,d,1,1,1);
+}
+
+function makeQRMatrix(text){
+  if(typeof window.qrcode !== 'function') throw new Error('QR library unavailable');
+  const qr = window.qrcode(0, 'H');
+  qr.addData(text, 'Byte');
+  qr.make();
+  const size = qr.getModuleCount();
+  const data = Array.from({length:size}, (_,row) =>
+    Array.from({length:size}, (_,col) => qr.isDark(row,col) ? 1 : 0)
+  );
+  return {size, matrix:data};
+}
+
+function buildQR(){
+  disposeGroup(qrGroup);
+  const p=palettes[season];
+  const scale=10.6/qrSize;
+  const offset=(qrSize-1)*scale/2;
+  const baseMat=new THREE.MeshStandardMaterial({color:p.ground,roughness:.92,metalness:0});
+  const darkMat=new THREE.MeshStandardMaterial({color:p.dark,roughness:.78,metalness:.02});
+  const lightMat=new THREE.MeshStandardMaterial({color:p.ground,roughness:.94});
+  const base=new THREE.Mesh(new THREE.BoxGeometry(11.5,.6,11.5),baseMat);
+  base.position.y=-.38;
+  base.receiveShadow=true;
+  qrGroup.add(base);
+
+  for(let y=0;y<qrSize;y++) for(let x=0;x<qrSize;x++){
+    const dark=matrix[y]?.[x];
+    const h=dark?rand(.28,.72):rand(.04,.13);
+    const m=new THREE.Mesh(roundedBoxGeometry(scale*.94,h,scale*.94),dark?darkMat:lightMat);
+    m.position.set(x*scale-offset,h/2,y*scale-offset);
+    m.castShadow=!!dark;
+    m.receiveShadow=true;
+    m.userData={dark,x,y,baseY:h/2,baseH:h};
+    qrGroup.add(m);
+  }
+  qrGroup.rotation.y=Math.PI/4;
+}
+
+function addBranch(parent, start, dir, len, radius, depth, p){
+  const end=start.clone().add(dir.clone().multiplyScalar(len));
+  const geom=new THREE.CylinderGeometry(radius*.55,radius,len,7);
+  const mat=new THREE.MeshStandardMaterial({color:p.trunk,roughness:.9});
+  const m=new THREE.Mesh(geom,mat);
+  m.castShadow=true;
+  const mid=start.clone().add(end).multiplyScalar(.5);
+  m.position.copy(mid);
+  const q=new THREE.Quaternion();
+  q.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.clone().normalize());
+  m.quaternion.copy(q);
+  parent.add(m);
+
+  if(depth<=0){
+    for(let i=0;i<rand(4,8);i++){
+      const s=rand(.18,.42);
+      const g=new THREE.IcosahedronGeometry(s,1);
+      const lm=new THREE.MeshStandardMaterial({color:i%3===0?p.leaf2:p.leaf,roughness:.85});
+      const leaf=new THREE.Mesh(g,lm);
+      leaf.position.copy(end).add(new THREE.Vector3(rand(-.55,.55),rand(-.15,.55),rand(-.55,.55)));
+      leaf.castShadow=true;
+      parent.add(leaf);
+      if(season==='spring' && Math.random()<.45){
+        const fg=new THREE.SphereGeometry(.075,6,6);
+        const fm=new THREE.MeshStandardMaterial({color:p.accent,emissive:p.accent,emissiveIntensity:.15});
+        const f=new THREE.Mesh(fg,fm);
+        f.position.copy(leaf.position).add(new THREE.Vector3(rand(-.12,.12),rand(-.12,.12),rand(-.12,.12)));
+        parent.add(f);
+      }
+    }
+    return;
+  }
+
+  const branches=depth===4?3:Math.floor(rand(2,4));
+  for(let i=0;i<branches;i++){
+    const nd=new THREE.Vector3(
+      dir.x+rand(-.7,.7),
+      Math.max(.28,dir.y+rand(-.15,.45)),
+      dir.z+rand(-.7,.7)
+    ).normalize();
+    addBranch(parent,end,nd,len*rand(.62,.78),radius*.69,depth-1,p);
+  }
+}
+
+function buildTree(){
+  disposeGroup(treeGroup);
+  disposeGroup(decoGroup);
+  const p=palettes[season];
+  addBranch(treeGroup,new THREE.Vector3(0,.1,0),new THREE.Vector3(0,1,0),3.0,.48,4,p);
+
+  const grassMat=new THREE.MeshStandardMaterial({color:p.leaf,roughness:.95});
+  for(let i=0;i<170;i++){
+    const a=Math.random()*Math.PI*2, r=rand(3.2,5.25), h=rand(.12,.48);
+    const blade=new THREE.Mesh(new THREE.ConeGeometry(.035,h,3),grassMat);
+    blade.position.set(Math.cos(a)*r,h/2,Math.sin(a)*r);
+    blade.rotation.y=rand(0,Math.PI);
+    decoGroup.add(blade);
+  }
+
+  for(let i=0;i<65;i++){
+    const g=new THREE.SphereGeometry(rand(.025,.06),6,6);
+    const m=new THREE.MeshStandardMaterial({color:p.accent,emissive:p.accent,emissiveIntensity:.2});
+    const petal=new THREE.Mesh(g,m);
+    petal.position.set(rand(-5.6,5.6),rand(.25,7),rand(-5.6,5.6));
+    petal.userData.fall=rand(.001,.004);
+    decoGroup.add(petal);
+  }
+}
+
+function applySeason(){
+  scene.fog.color.set(palettes[season].bg);
+  document.body.style.background=`radial-gradient(circle at 50% 35%, #3f4d42 0, #1c211e 48%, #0d0f0e 100%)`;
+  buildQR();
+  buildTree();
+}
+
+function grow(){
+  const input=document.querySelector('#urlInput');
+  let value=input.value.trim();
+  if(!value) return;
+  if(!/^https?:\/\//i.test(value)) value='https://'+value;
+  input.value=value;
+  showStatus('Growing…',true);
+
+  try{
+    const data=makeQRMatrix(value);
+    matrix=data.matrix;
+    qrSize=data.size;
+    applySeason();
+    const currentParams=new URLSearchParams(location.search);
+    const qs=new URLSearchParams({q:value,s:season});
+    if(currentParams.get('h')==='true') qs.set('h','true');
+    history.replaceState(null,'','?'+qs);
+    setTimeout(()=>showStatus(`QR ${qrSize}×${qrSize} · ready`,true),250);
+    setTimeout(()=>showStatus('',false),1500);
+  }catch(e){
+    console.error(e);
+    showStatus('Could not generate QR',true);
+  }
+}
+
+function showStatus(text,on){
+  const el=document.querySelector('#status');
+  el.textContent=text;
+  el.classList.toggle('show',on);
+}
+
+function setView(scan){
+  isScan=scan;
+  const from={pos:camera.position.clone(),target:controls.target.clone()};
+  const to=scan
+    ? {pos:new THREE.Vector3(0,22,.001),target:new THREE.Vector3(0,0,0)}
+    : {pos:new THREE.Vector3(16,16,19),target:new THREE.Vector3(0,2.7,0)};
+  animation={from,to,start:performance.now(),duration:900,t:0};
+  controls.enabled=!scan;
+  document.querySelector('#scanBtn').textContent=scan?'Return to tree':'Tap tree to scan';
+}
+
+canvas.addEventListener('dblclick',()=>setView(!isScan));
+document.querySelector('#scanBtn').onclick=()=>setView(!isScan);
+let pointerDown=0, moved=false;
+canvas.addEventListener('pointerdown',()=>{pointerDown=performance.now();moved=false});
+canvas.addEventListener('pointermove',()=>moved=true);
+canvas.addEventListener('pointerup',()=>{
+  if(!moved && performance.now()-pointerDown<300) setView(!isScan);
+});
+
+document.querySelector('#growBtn').onclick=grow;
+document.querySelector('#urlInput').addEventListener('keydown',e=>{if(e.key==='Enter')grow()});
+
+document.querySelectorAll('#seasonControls button').forEach(btn=>btn.onclick=()=>{
+  season=btn.dataset.season;
+  document.querySelectorAll('#seasonControls button').forEach(b=>b.classList.toggle('active',b===btn));
+  applySeason();
+  const q=new URLSearchParams(location.search);
+  q.set('s',season);
+  history.replaceState(null,'','?'+q);
+});
+
+document.querySelector('#shareBtn').onclick=async()=>{
+  try{
+    const shareUrl=new URL(location.href);
+    shareUrl.searchParams.set('h','true');
+    await navigator.clipboard.writeText(shareUrl.toString());
+    showStatus('Share link copied',true);
+  }catch{
+    showStatus('Copy blocked by browser',true);
+  }
+  setTimeout(()=>showStatus('',false),1100);
+};
+
+function resize(){
+  renderer.setSize(innerWidth,innerHeight,false);
+  camera.aspect=innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+}
+addEventListener('resize',resize);
+resize();
+
+function animate(now){
+  requestAnimationFrame(animate);
+
+  if(animation.t<1 && animation.from){
+    animation.t=Math.min(1,(now-animation.start)/animation.duration);
+    const t=1-Math.pow(1-animation.t,3);
+    camera.position.lerpVectors(animation.from.pos,animation.to.pos,t);
+    controls.target.lerpVectors(animation.from.target,animation.to.target,t);
+
+    const treeScale=isScan ? (1-t*.96) : (.04+t*.96);
+    treeGroup.scale.setScalar(treeScale);
+    treeGroup.visible=!(isScan && t>.98);
+
+    decoGroup.traverse(o=>{
+      if(o.material){
+        o.material.transparent=true;
+        o.material.opacity=isScan?1-t:t;
+      }
+    });
+
+    qrGroup.rotation.y=(Math.PI/4)*(isScan?1-t:t);
+  }
+
+  if(!isScan) treeGroup.rotation.y += .0008;
+  decoGroup.children.forEach(o=>{
+    if(o.userData.fall){
+      o.position.y-=o.userData.fall*16;
+      if(o.position.y<.1)o.position.y=7;
+    }
+  });
+
+  controls.update();
+  renderer.render(scene,camera);
+}
+
+const params=new URLSearchParams(location.search);
+const q=params.get('q'), s=params.get('s'), h=params.get('h');
+if(h==='true') document.querySelector('section.composer.glass')?.classList.add('share-hidden');
+if(q) document.querySelector('#urlInput').value=q;
+if(s && palettes[s]){
+  season=s;
+  document.querySelectorAll('#seasonControls button').forEach(b=>b.classList.toggle('active',b.dataset.season===s));
+}
+
+grow();
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>

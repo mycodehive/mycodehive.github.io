@@ -1,0 +1,808 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>자전거 휴대승차 가능 여부 | 공식 규약 기준</title>
+  <meta name="description" content="철도·도시철도·경전철 노선 및 수단별 자전거 휴대승차 가능 여부를 공식 규약과 공지 기준으로 정리한 배포용 페이지입니다." />
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --surface: #ffffff;
+      --surface-soft: #f0f4f8;
+      --text: #172033;
+      --muted: #667085;
+      --line: #d9e2ec;
+      --primary: #2563eb;
+      --primary-dark: #1e40af;
+      --green: #12805c;
+      --green-bg: #e7f8f1;
+      --orange: #b54708;
+      --orange-bg: #fff4e5;
+      --red: #b42318;
+      --red-bg: #fff0ee;
+      --blue-bg: #eef4ff;
+      --shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+      --radius-lg: 28px;
+      --radius-md: 18px;
+      --radius-sm: 12px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(37, 99, 235, 0.16), transparent 34rem),
+        radial-gradient(circle at top right, rgba(18, 128, 92, 0.12), transparent 30rem),
+        var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+    }
+
+    a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    a:hover { text-decoration: underline; }
+
+    .page {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 48px 0 72px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.25fr 0.75fr;
+      gap: 28px;
+      align-items: stretch;
+      margin-bottom: 28px;
+    }
+
+    .hero-main,
+    .hero-side,
+    .panel {
+      background: rgba(255, 255, 255, 0.86);
+      border: 1px solid rgba(217, 226, 236, 0.9);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+      border-radius: var(--radius-lg);
+    }
+
+    .hero-main {
+      padding: 38px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-main::after {
+      content: "";
+      position: absolute;
+      right: -80px;
+      top: -80px;
+      width: 240px;
+      height: 240px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.18), rgba(18, 128, 92, 0.12));
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: var(--blue-bg);
+      color: var(--primary-dark);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+
+    h1 {
+      margin: 18px 0 14px;
+      font-size: clamp(32px, 5vw, 56px);
+      line-height: 1.08;
+      letter-spacing: -0.055em;
+    }
+
+    .lead {
+      max-width: 760px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 18px;
+      letter-spacing: -0.01em;
+    }
+
+    .hero-side {
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .date-card {
+      padding: 20px;
+      background: var(--surface-soft);
+      border-radius: 22px;
+    }
+
+    .date-card strong {
+      display: block;
+      font-size: 28px;
+      line-height: 1.2;
+      letter-spacing: -0.04em;
+    }
+
+    .date-card span {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .legend {
+      display: grid;
+      gap: 10px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      display: inline-block;
+      flex: 0 0 auto;
+    }
+
+    .dot.green { background: var(--green); }
+    .dot.orange { background: var(--orange); }
+    .dot.red { background: var(--red); }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin: 28px 0;
+    }
+
+    .summary-card {
+      padding: 22px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      box-shadow: 0 14px 28px rgba(15, 23, 42, 0.05);
+    }
+
+    .summary-card .num {
+      font-size: 34px;
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+    }
+
+    .summary-card .label {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .search {
+      flex: 1 1 320px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      box-shadow: 0 8px 22px rgba(15, 23, 42, 0.04);
+    }
+
+    .search input {
+      width: 100%;
+      border: 0;
+      outline: 0;
+      font: inherit;
+      background: transparent;
+      color: var(--text);
+    }
+
+    .chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: 0.18s ease;
+    }
+
+    .chip:hover,
+    .chip.active {
+      border-color: rgba(37, 99, 235, 0.3);
+      background: var(--blue-bg);
+      color: var(--primary-dark);
+    }
+
+    .panel {
+      padding: 18px;
+      overflow: hidden;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: 20px;
+      border: 1px solid var(--line);
+      background: var(--surface);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1040px;
+      font-size: 14px;
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: #f8fafc;
+      color: #475467;
+      text-align: left;
+      padding: 15px 16px;
+      border-bottom: 1px solid var(--line);
+      font-size: 13px;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+    }
+
+    tbody td {
+      padding: 16px;
+      border-bottom: 1px solid #edf2f7;
+      vertical-align: top;
+    }
+
+    tbody tr:last-child td { border-bottom: 0; }
+    tbody tr:hover { background: #fbfdff; }
+
+    .category {
+      display: inline-flex;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: var(--surface-soft);
+      color: #475467;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .route {
+      font-weight: 900;
+      letter-spacing: -0.02em;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-weight: 900;
+      white-space: nowrap;
+      font-size: 13px;
+    }
+
+    .status.ok { color: var(--green); background: var(--green-bg); }
+    .status.conditional { color: var(--orange); background: var(--orange-bg); }
+    .status.no { color: var(--red); background: var(--red-bg); }
+    .status.check { color: #475467; background: var(--surface-soft); }
+
+    .note {
+      color: var(--muted);
+      word-break: keep-all;
+    }
+
+    .source-list {
+      display: grid;
+      gap: 14px;
+      margin-top: 28px;
+    }
+
+    .source-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 20px;
+    }
+
+    .source-card h3 {
+      margin: 0 0 10px;
+      font-size: 18px;
+      letter-spacing: -0.03em;
+    }
+
+    .source-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .footer {
+      margin-top: 28px;
+      padding: 20px;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .mobile-cards { display: none; }
+
+    @media (max-width: 880px) {
+      .page { width: min(100% - 24px, 720px); padding-top: 28px; }
+      .hero { grid-template-columns: 1fr; }
+      .hero-main, .hero-side { padding: 24px; border-radius: 24px; }
+      .summary-grid { grid-template-columns: repeat(2, 1fr); }
+      .panel { padding: 14px; }
+      .table-wrap { display: none; }
+      .mobile-cards {
+        display: grid;
+        gap: 12px;
+      }
+      .mobile-card {
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        padding: 18px;
+        background: var(--surface);
+      }
+      .mobile-card-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: flex-start;
+        margin-bottom: 12px;
+      }
+      .mobile-card h3 {
+        margin: 8px 0 0;
+        font-size: 18px;
+        line-height: 1.35;
+        letter-spacing: -0.03em;
+      }
+      .mobile-statuses {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 14px 0;
+      }
+      .mobile-card p {
+        margin: 0 0 10px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .summary-grid { grid-template-columns: 1fr; }
+      h1 { font-size: 34px; }
+      .lead { font-size: 16px; }
+      .toolbar { align-items: stretch; }
+      .chips { width: 100%; }
+      .chip { flex: 1 1 auto; }
+    }
+
+    @media print {
+      body { background: white; }
+      .hero-main, .hero-side, .panel, .summary-card, .source-card { box-shadow: none; }
+      .toolbar { display: none; }
+      .table-wrap { display: block; overflow: visible; }
+      table { min-width: 0; font-size: 11px; }
+      .mobile-cards { display: none; }
+      a { color: #111827; text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero" aria-labelledby="page-title">
+      <div class="hero-main">
+        <span class="eyebrow">공식 규약·공지 기준</span>
+        <h1 id="page-title">자전거 휴대승차<br />가능 여부 정리</h1>
+        <p class="lead">철도, 도시철도, 경전철 등 노선 및 수단별 자전거 휴대승차 가능 여부를 운영기관의 공식 약관·공지·FAQ 기준으로 정리했습니다. 실제 이용 전에는 운행기관의 최신 안내를 한 번 더 확인하세요.</p>
+      </div>
+      <aside class="hero-side" aria-label="문서 정보">
+        <div class="date-card">
+          <strong>2026.05.12</strong>
+          <span>확인 기준일</span>
+        </div>
+        <div class="legend" aria-label="상태 범례">
+          <div class="legend-item"><span class="dot green"></span> 가능: 조건 충족 시 일반 이용 가능</div>
+          <div class="legend-item"><span class="dot orange"></span> 조건부: 시간·포장·거치대 등 제한 있음</div>
+          <div class="legend-item"><span class="dot red"></span> 불가: 일반 자전거 또는 접이식까지 제한</div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="summary-grid" aria-label="요약 통계">
+      <div class="summary-card">
+        <div class="num">8</div>
+        <div class="label">일반 자전거 가능 또는 조건부 가능 그룹</div>
+      </div>
+      <div class="summary-card">
+        <div class="num">9</div>
+        <div class="label">접이식 자전거 중심 허용 그룹</div>
+      </div>
+      <div class="summary-card">
+        <div class="num">4</div>
+        <div class="label">접이식 포함 제한 또는 사실상 불가 그룹</div>
+      </div>
+      <div class="summary-card">
+        <div class="num">2</div>
+        <div class="label">공식 원문 추가 확인 필요 그룹</div>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="table-title">
+      <div class="toolbar">
+        <div class="search" role="search">
+          <span aria-hidden="true">🔎</span>
+          <input id="searchInput" type="search" placeholder="노선, 수단, 기관명으로 검색" aria-label="노선 검색" />
+        </div>
+        <div class="chips" aria-label="필터">
+          <button class="chip active" data-filter="all">전체</button>
+          <button class="chip" data-filter="가능">가능</button>
+          <button class="chip" data-filter="조건부">조건부</button>
+          <button class="chip" data-filter="불가">불가</button>
+          <button class="chip" data-filter="확인필요">확인필요</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table id="rulesTable">
+          <thead>
+            <tr>
+              <th>구분</th>
+              <th>노선·수단</th>
+              <th>일반 자전거</th>
+              <th>접이식 자전거</th>
+              <th>핵심 조건</th>
+              <th>공식 근거</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="mobile-cards" id="mobileCards"></div>
+    </section>
+
+    <section class="source-list" aria-labelledby="source-title">
+      <div class="source-card">
+        <h2 id="source-title" style="margin:0 0 8px; font-size:24px; letter-spacing:-0.04em;">이용 전 확인 포인트</h2>
+        <p>자전거 휴대승차 가능 노선이라도 혼잡 시간, 명절 특별수송기간, 역사 구조, 안전상 사유에 따라 현장에서 제한될 수 있습니다. 일반 자전거는 보통 맨 앞칸 또는 맨 뒤칸, 엘리베이터 이용, 역사·열차 내 주행 금지 등의 준수사항이 적용됩니다.</p>
+      </div>
+      <div class="source-card">
+        <h3>분류 기준</h3>
+        <p>“가능”은 일반 자전거 휴대승차가 일정 조건에서 허용되는 경우, “조건부”는 포장·분해·거치대·시간 제한이 핵심인 경우, “불가”는 일반 자전거가 제한되거나 접이식까지 제한되는 경우입니다.</p>
+      </div>
+    </section>
+
+    <footer class="footer">
+      이 페이지는 배포용 요약 자료입니다. 최신 규정은 각 운영기관의 공식 약관·공지·FAQ를 최종 기준으로 확인하세요.
+    </footer>
+  </main>
+
+  <script>
+    const rules = [
+      {
+        category: "고속·일반열차",
+        route: "KTX, ITX-새마을, ITX-마음, 새마을, 누리로, 무궁화 등 코레일 열차",
+        normal: "조건부 가능",
+        folding: "조건부 가능",
+        condition: "접힌 상태의 접이식 자전거 또는 분해 후 전용가방 보관 시 예외적으로 가능",
+        source: "코레일 여객운송약관 제22조",
+        url: "https://www.korail.com/file/cubedata/COMMON/jfile/202504/18/2025041819647fb8f38770.pdf"
+      },
+      {
+        category: "고속열차",
+        route: "SRT",
+        normal: "조건부 가능",
+        folding: "조건부 가능",
+        condition: "접거나 완전 분해 후 가방 보관 시 가능. 명절·출퇴근 등 혼잡 시 제한 가능",
+        source: "SR 여객운송약관 및 공식 안내",
+        url: "https://etk.srail.kr/cms/archive.do?pageId=TK0409910000"
+      },
+      {
+        category: "코레일 광역철도",
+        route: "수도권 1·3·4호선 코레일 구간, 경의중앙선, 수인분당선, 경강선, 동해선 등",
+        normal: "조건부 가능",
+        folding: "가능",
+        condition: "일반 자전거는 토요일·일요일·공휴일 가능. 접이식은 접은 상태 기준",
+        source: "코레일 공식 보도자료",
+        url: "https://info.korail.com/info/selectBbsNttView.do?bbsNo=199&integrDeptCode=&key=911&nttNo=18336&pageIndex=38&searchCnd=all&searchCtgry=&searchKrwd="
+      },
+      {
+        category: "코레일 광역철도 특례",
+        route: "경춘선",
+        normal: "조건부 가능",
+        folding: "가능",
+        condition: "주말·공휴일 가능. 평일 10:00~16:00 자전거 휴대 시범운영 구간 해당",
+        source: "코레일 공식 보도자료",
+        url: "https://info.korail.com/info/selectBbsNttView.do?bbsNo=199&integrDeptCode=&key=911&nttNo=18336&pageIndex=38&searchCnd=all&searchCtgry=&searchKrwd="
+      },
+      {
+        category: "코레일 광역철도 제한",
+        route: "서해선 소사~원시",
+        normal: "불가",
+        folding: "확인필요",
+        condition: "일반 자전거는 요일·시간과 관계없이 휴대 불가. 접이식은 약관상 예외 가능성이 있으나 최신 원문 확인 권장",
+        source: "코레일 공식 보도자료",
+        url: "https://info.korail.com/info/selectBbsNttView.do?bbsNo=199&integrDeptCode=&key=911&nttNo=18336&pageIndex=38&searchCnd=all&searchCtgry=&searchKrwd="
+      },
+      {
+        category: "서울교통공사",
+        route: "서울 1~8호선 서울교통공사 구간",
+        normal: "조건부 가능",
+        folding: "가능",
+        condition: "일반 자전거는 토요일·법정공휴일 가능. 맨 앞·뒤칸 이용 등 준수사항 적용",
+        source: "서울교통공사 여객운송약관 인용 자료",
+        url: "https://easylaw.go.kr/CSP/CnpClsMain.laf?ccfNo=2&cciNo=3&cnpClsNo=1&csmSeq=719&popMenu=ov"
+      },
+      {
+        category: "서울 7호선 특례",
+        route: "서울 7호선",
+        normal: "조건부 가능",
+        folding: "가능",
+        condition: "평일 10:00~16:00 가능. 토요일·공휴일 가능. 타 노선 환승 제한 유의",
+        source: "서울시 공식 안내",
+        url: "https://mediahub.seoul.go.kr/archives/2000159"
+      },
+      {
+        category: "인천교통공사",
+        route: "인천 1호선, 서울 7호선 인천교통공사 구간",
+        normal: "조건부 가능",
+        folding: "가능",
+        condition: "2호선을 제외한 공사 영업구간에서 토요일·법정공휴일 일반 자전거 허용",
+        source: "인천교통공사 여객운송약관",
+        url: "https://www.ictr.or.kr/main/railway/clause/clause_7th.jsp"
+      },
+      {
+        category: "인천교통공사 제한",
+        route: "인천 2호선",
+        normal: "불가",
+        folding: "가능",
+        condition: "자전거 휴대 특례에서 2호선 제외. 접힌 상태의 접이식 자전거는 예외",
+        source: "인천교통공사 여객운송약관",
+        url: "https://www.ictr.or.kr/main/railway/clause/clause_7th.jsp"
+      },
+      {
+        category: "부산교통공사",
+        route: "부산 1·2·3·4호선",
+        normal: "조건부 가능",
+        folding: "가능",
+        condition: "일반 자전거는 토요일·법정공휴일 또는 사장 지정일 가능. 접이식은 접은 상태 기준",
+        source: "부산교통공사 여객운송약관",
+        url: "https://work.humetro.busan.kr/homepage/default/page/subLocation.do?menu_no=1001010504"
+      },
+      {
+        category: "대전교통공사",
+        route: "대전 1호선",
+        normal: "조건부 가능",
+        folding: "가능",
+        condition: "요일 관계없이 가능. 일반 자전거는 평일 07:00~10:00, 16:00~19:30 제한",
+        source: "대전교통공사 공식 FAQ",
+        url: "https://www.djtc.kr/kor/board.do?bbsIdx=164&menuIdx=333"
+      },
+      {
+        category: "광주교통공사",
+        route: "광주 1호선",
+        normal: "조건부 가능",
+        folding: "가능",
+        condition: "일반 자전거는 토요일·일요일·공휴일 가능. 접이식 또는 앞바퀴 분리 시 요일 무관 가능",
+        source: "광주교통공사 공식 보도자료",
+        url: "https://www.grtc.co.kr/subway/reportBoard/board/22/read/11460?page=40&query=%EC%97%AD%EC%82%AC"
+      },
+      {
+        category: "대구교통공사",
+        route: "대구 1·2호선",
+        normal: "확인필요",
+        folding: "확인필요",
+        condition: "공식 약관 페이지 접근은 가능했으나 자전거 조항 본문 미확인. 최신 원문 재확인 필요",
+        source: "대구교통공사 공식 약관 원문 확인 필요",
+        url: "#"
+      },
+      {
+        category: "대구교통공사",
+        route: "대구 3호선",
+        normal: "확인필요",
+        folding: "확인필요",
+        condition: "공식 약관 페이지 접근은 가능했으나 자전거 조항 본문 미확인. 최신 원문 재확인 필요",
+        source: "대구교통공사 공식 약관 원문 확인 필요",
+        url: "#"
+      },
+      {
+        category: "서울 9호선",
+        route: "서울 9호선",
+        normal: "불가",
+        folding: "가능",
+        condition: "접이식 자전거를 접은 상태로 휴대 가능. 일반 자전거 휴대 특례는 확인되지 않음",
+        source: "서울 9호선 여객운송약관 인용 자료",
+        url: "https://m.easylaw.go.kr/MOB/CsmInfoRetrieve.laf?ccfNo=2&cciNo=3&cnpClsNo=1&csmSeq=719"
+      },
+      {
+        category: "공항철도",
+        route: "공항철도",
+        normal: "불가",
+        folding: "가능",
+        condition: "2025년 12월 19일 자전거 휴대승차 기준 변경 공지 확인. 접이식 중심 이용 권장",
+        source: "공항철도 공식 공지",
+        url: "https://www.arex.or.kr/contentView.do?contentNo=CT202512190000000001&etcNo=&menuNo=MN202602270000000003"
+      },
+      {
+        category: "신분당선",
+        route: "신분당선",
+        normal: "불가",
+        folding: "가능",
+        condition: "접이식 자전거는 접힌 상태로만 휴대 가능. 펼친 상태 이동 불가",
+        source: "신분당선 여객운송약관",
+        url: "https://www.shinbundang.co.kr/policy/policy1.jsp"
+      },
+      {
+        category: "GTX-A",
+        route: "GTX-A",
+        normal: "불가",
+        folding: "가능",
+        condition: "접힌 상태의 접이식 자전거만 예외적으로 휴대 가능",
+        source: "GTX-A 여객운송약관",
+        url: "https://www.gtx-a.com/transitTC.do"
+      },
+      {
+        category: "김포골드라인",
+        route: "김포골드라인",
+        normal: "불가",
+        folding: "불가",
+        condition: "자전거, 접이식 자전거, 전동킥보드 휴대 금지. 장애인 이동수단으로 간주되는 접이식 자전거만 예외",
+        source: "김포골드라인 여객운송약관",
+        url: "https://gimpogoldline.com/?page_id=1039"
+      },
+      {
+        category: "용인경전철",
+        route: "용인 에버라인",
+        normal: "불가",
+        folding: "불가",
+        condition: "자전거, 원동기장치자전거, 접이식 자전거 포함 휴대승차 및 환승 불가",
+        source: "용인경전철 여객운송약관",
+        url: "https://ever-line.co.kr/page/?M2_IDX=28981"
+      },
+      {
+        category: "우이신설선",
+        route: "우이신설선",
+        normal: "불가",
+        folding: "불가",
+        condition: "자전거, 접이식 자전거, 킥보드, PM 휴대승차 불가 조항 확인. 원문 완전 열람은 제한됨",
+        source: "우이신설선 여객운송약관",
+        url: "https://www.ui-line.com/html/clause.php"
+      },
+      {
+        category: "신림선",
+        route: "신림선",
+        normal: "불가",
+        folding: "불가",
+        condition: "자전거, 접이식 자전거 포함 휴대승차 불가. 장애인 이동수단으로 간주되는 경우만 예외",
+        source: "신림선 공식 답변 및 철도산업정보센터 자료",
+        url: "https://sillimlrt.com/site/kr/html/sub02/020103.html?GotoPage=1&mode=V&no=dcf7653c15b7a439e1a007beac7381b6"
+      }
+    ];
+
+    const tbody = document.querySelector('#rulesTable tbody');
+    const mobileCards = document.querySelector('#mobileCards');
+    const searchInput = document.querySelector('#searchInput');
+    const chips = document.querySelectorAll('.chip');
+    let activeFilter = 'all';
+
+    function statusClass(value) {
+      if (value.includes('가능') && !value.includes('조건부') && !value.includes('확인')) return 'ok';
+      if (value.includes('조건부')) return 'conditional';
+      if (value.includes('불가')) return 'no';
+      return 'check';
+    }
+
+    function filterState(row) {
+      const joined = [row.normal, row.folding].join(' ');
+      if (joined.includes('확인필요')) return '확인필요';
+      if (row.normal.includes('불가') && row.folding.includes('불가')) return '불가';
+      if (joined.includes('조건부')) return '조건부';
+      if (joined.includes('가능')) return '가능';
+      return '확인필요';
+    }
+
+    function statusLabel(value) {
+      return `<span class="status ${statusClass(value)}">${value}</span>`;
+    }
+
+    function sourceLink(row) {
+      if (!row.url || row.url === '#') return `<span class="note">${row.source}</span>`;
+      return `<a href="${row.url}" target="_blank" rel="noopener noreferrer">${row.source}</a>`;
+    }
+
+    function matches(row) {
+      const keyword = searchInput.value.trim().toLowerCase();
+      const text = Object.values(row).join(' ').toLowerCase();
+      const searchOk = !keyword || text.includes(keyword);
+      const filterOk = activeFilter === 'all' || filterState(row) === activeFilter || row.normal.includes(activeFilter) || row.folding.includes(activeFilter);
+      return searchOk && filterOk;
+    }
+
+    function render() {
+      const rows = rules.filter(matches);
+      tbody.innerHTML = rows.map(row => `
+        <tr>
+          <td><span class="category">${row.category}</span></td>
+          <td><div class="route">${row.route}</div></td>
+          <td>${statusLabel(row.normal)}</td>
+          <td>${statusLabel(row.folding)}</td>
+          <td class="note">${row.condition}</td>
+          <td>${sourceLink(row)}</td>
+        </tr>
+      `).join('');
+
+      mobileCards.innerHTML = rows.map(row => `
+        <article class="mobile-card">
+          <div class="mobile-card-top">
+            <div>
+              <span class="category">${row.category}</span>
+              <h3>${row.route}</h3>
+            </div>
+          </div>
+          <div class="mobile-statuses">
+            <span>일반 ${statusLabel(row.normal)}</span>
+            <span>접이식 ${statusLabel(row.folding)}</span>
+          </div>
+          <p>${row.condition}</p>
+          <p>근거: ${sourceLink(row)}</p>
+        </article>
+      `).join('');
+    }
+
+    searchInput.addEventListener('input', render);
+    chips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        chips.forEach(item => item.classList.remove('active'));
+        chip.classList.add('active');
+        activeFilter = chip.dataset.filter;
+        render();
+      });
+    });
+
+    render();
+  </script>
+</body>
+</html>

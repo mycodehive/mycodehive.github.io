@@ -125,6 +125,28 @@
     #jsmind_container jmnode:hover{transform:translateY(-1px)!important;box-shadow:0 10px 22px rgba(29,42,70,.14)!important}
     #jsmind_container jmnode.selected{outline:3px solid rgba(49,87,213,.18)!important;outline-offset:3px!important}
     #jsmind_container jmnode.root{padding:11px 15px!important;font-size:14px!important}
+    #jsmind_container jmnode.has-memo{position:absolute!important}
+    #jsmind_container jmnode.has-memo::after{
+      content:"M";
+      position:absolute;
+      top:-8px;
+      right:-8px;
+      min-width:18px;
+      height:18px;
+      padding:0 4px;
+      display:grid;
+      place-items:center;
+      border:2px solid #fff;
+      border-radius:999px;
+      background:#3157d5;
+      color:#fff;
+      font-size:8px;
+      font-weight:900;
+      line-height:1;
+      box-shadow:0 4px 10px rgba(49,87,213,.28);
+      pointer-events:none;
+      z-index:6
+    }
     .statusbar{
       height:27px;flex:0 0 27px;display:flex;align-items:center;justify-content:space-between;
       padding:0 10px;background:#fafbfd;border-top:1px solid var(--line);color:#7b8798;font-size:8px
@@ -345,6 +367,21 @@
         nodeNotes=embedded&&typeof embedded==="object"&&!Array.isArray(embedded)?{...embedded}:{};
       }
 
+      function decorateMemoBadges(){
+        const container=$("jsmind_container");
+        if(!container) return;
+        container.querySelectorAll("jmnode").forEach(el=>{
+          const id=el.getAttribute("nodeid")||el.getAttribute("data-nodeid")||el.dataset?.nodeid||"";
+          const hasMemo=!!(id&&String(nodeNotes[id]||"").trim());
+          el.classList.toggle("has-memo",hasMemo);
+          if(hasMemo){
+            el.setAttribute("title",(el.textContent||"").trim()+" · 메모 있음");
+          }else{
+            el.removeAttribute("title");
+          }
+        });
+      }
+
       function refreshStats(){
         const data=currentData();
         const count=countNodes(data.data);
@@ -352,6 +389,7 @@
         const node=jm.get_selected_node();
         els.selectedChip.textContent=node?node.topic:"선택 없음";
         refreshInspector(node);
+        requestAnimationFrame(decorateMemoBadges);
       }
 
       function refreshInspector(node){
@@ -383,6 +421,7 @@
           localStorage.setItem(STORAGE_KEY,JSON.stringify(dataWithNotes()));
           localStorage.setItem(TITLE_KEY,els.title.value.trim()||"나의 마인드맵");
           dirty=false;
+          decorateMemoBadges();
           els.saveState.textContent=auto?"자동 저장 완료":"저장 완료";
           if(!auto) toast("브라우저에 저장했습니다.","ok");
         }catch(error){
@@ -400,6 +439,8 @@
           centerCanvas(false);
           dirty=false;
           refreshStats();
+          requestAnimationFrame(()=>requestAnimationFrame(decorateMemoBadges));
+          setTimeout(decorateMemoBadges,80);
           els.saveState.textContent="불러오기 완료";
           setStatus(message);
         }catch(error){
@@ -571,6 +612,7 @@
         if(!node) return;
         nodeNotes[node.id]=els.memo.value;
         els.memoCount.textContent=els.memo.value.length.toLocaleString()+"자";
+        decorateMemoBadges();
         els.saveState.textContent="메모 수정 · 자동 저장 대기";
         dirty=true;
         clearTimeout(memoTimer);

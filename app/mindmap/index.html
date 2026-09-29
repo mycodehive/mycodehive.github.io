@@ -125,12 +125,17 @@
     #jsmind_container jmnode:hover{transform:translateY(-1px)!important;box-shadow:0 10px 22px rgba(29,42,70,.14)!important}
     #jsmind_container jmnode.selected{outline:3px solid rgba(49,87,213,.18)!important;outline-offset:3px!important}
     #jsmind_container jmnode.root{padding:11px 15px!important;font-size:14px!important}
-    #jsmind_container jmnode.has-memo{position:absolute!important}
+    #jsmind_container jmnode.has-memo{
+      position:absolute!important;
+      overflow:visible!important;
+      z-index:20!important
+    }
     #jsmind_container jmnode.has-memo::after{
       content:"M";
       position:absolute;
-      top:-22px;
-      right:-6px;
+      top:0;
+      right:0;
+      transform:translate(42%,-72%);
       min-width:18px;
       height:18px;
       padding:0 4px;

@@ -1,12 +1,15 @@
 document.addEventListener("DOMContentLoaded", () => {
   const MAX_DICE = 6;
   const MIN_DICE = 1;
+  // CSS 3D face orientation:
+  // front=1, back=6, right=3, left=4, top=2, bottom=5.
+  // To bring a face toward the viewer, rotate the cube in the inverse direction.
   const FACE_ROTATIONS = {
     1:{x:0,y:0,z:0},
-    2:{x:90,y:0,z:0},
+    2:{x:-90,y:0,z:0},
     3:{x:0,y:-90,z:0},
     4:{x:0,y:90,z:0},
-    5:{x:-90,y:0,z:0},
+    5:{x:90,y:0,z:0},
     6:{x:0,y:180,z:0}
   };
   const PIPS = {

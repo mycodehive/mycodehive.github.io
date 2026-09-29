@@ -31,7 +31,7 @@
       color:var(--text);
       background:var(--bg)
     }
-    button,input{font:inherit;color:inherit}
+    button,input,textarea{font:inherit;color:inherit}
     button{cursor:pointer}
     .app{height:100vh;display:flex;flex-direction:column;min-width:1040px}
     .topbar{
@@ -136,10 +136,15 @@
       padding:20px 12px;border:1px dashed #d2dae5;border-radius:10px;text-align:center;color:#8994a5;font-size:9px;line-height:1.5
     }
     .field{display:block;margin-bottom:12px;color:#667286;font-size:8px}
-    .field input{
-      width:100%;margin-top:5px;height:34px;padding:0 9px;border:1px solid var(--line);border-radius:7px;background:#fbfcfd;outline:0;font-size:10px
+    .field input,.field textarea{
+      width:100%;margin-top:5px;padding:0 9px;border:1px solid var(--line);border-radius:7px;background:#fbfcfd;outline:0;font-size:10px
     }
-    .field input:focus{border-color:#91a6eb;box-shadow:0 0 0 2px #edf1ff}
+    .field input{height:34px}
+    .field textarea{min-height:132px;padding:9px;resize:vertical;line-height:1.55}
+    .field input:focus,.field textarea:focus{border-color:#91a6eb;box-shadow:0 0 0 2px #edf1ff}
+    .memo-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .memo-count{font-size:7px;color:#99a3b2}
+    .memo-help{display:block;margin-top:5px;color:#96a0af;font-size:7px;line-height:1.45}
     .inspector-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
     .inspector-actions button{
       border:1px solid var(--line);border-radius:7px;background:#fff;padding:8px;font-size:8px;color:#596579
@@ -186,7 +191,7 @@
 
         <section class="section">
           <h2>검색</h2>
-          <p>노드 제목에서 키워드를 찾아 선택합니다.</p>
+          <p>노드 제목과 메모에서 키워드를 찾아 선택합니다.</p>
           <div class="search-box">
             <input id="nodeSearch" type="search" placeholder="노드 검색">
             <button id="btn_search" type="button">⌕</button>
@@ -248,6 +253,11 @@
             <label class="field">노드 제목
               <input id="nodeTopic" type="text" placeholder="노드 제목">
             </label>
+            <label class="field">
+              <span class="memo-head"><span>노드 메모</span><span id="memoCount" class="memo-count">0자</span></span>
+              <textarea id="nodeMemo" placeholder="이 노드에 대한 설명, 할 일, 링크, 아이디어 등을 자유롭게 기록하세요."></textarea>
+              <small class="memo-help">입력 내용은 자동 저장되며 JSON 내보내기에도 포함됩니다.</small>
+            </label>
             <div class="inspector-actions">
               <button id="applyTopic" class="primary" type="button">적용</button>
               <button id="focusNode" type="button">선택 강조</button>
@@ -287,13 +297,14 @@
       let autoSaveTimer = null;
       let searchMatches = [];
       let searchIndex = -1;
+      let nodeNotes = {};
 
       const els = {
         title:$("mapTitle"), saveState:$("saveState"), status:$("statusText"),
         count:$("nodeCount"), selectedChip:$("selectedChip"),
         search:$("nodeSearch"), searchResult:$("searchResult"),
         inspector:$("nodeInspector"), emptyInspector:$("emptyInspector"),
-        topic:$("nodeTopic"), meta:$("nodeMeta"),
+        topic:$("nodeTopic"), memo:$("nodeMemo"), memoCount:$("memoCount"), meta:$("nodeMeta"),
         canvasScroll:$("canvasScroll"), canvasStage:$("canvasStage"),
         zoomLabel:$("zoomLabel"), fileInput:$("file_input"), toast:$("toastRoot")
       };
@@ -315,12 +326,24 @@
 
       function flatten(tree,acc=[]){
         if(!tree) return acc;
-        acc.push({id:tree.id,topic:String(tree.topic||"")});
+        acc.push({id:tree.id,topic:String(tree.topic||""),memo:String(nodeNotes[tree.id]||"")});
         (tree.children||[]).forEach(child=>flatten(child,acc));
         return acc;
       }
 
       function currentData(){ return jm.get_data("node_tree"); }
+
+      function dataWithNotes(){
+        const payload=currentData();
+        payload.meta=payload.meta||{};
+        payload.meta.nodeNotes={...nodeNotes};
+        return payload;
+      }
+
+      function hydrateNotes(data){
+        const embedded=data?.meta?.nodeNotes;
+        nodeNotes=embedded&&typeof embedded==="object"&&!Array.isArray(embedded)?{...embedded}:{};
+      }
 
       function refreshStats(){
         const data=currentData();
@@ -337,11 +360,14 @@
         els.inspector.hidden=!has;
         if(!has) return;
         els.topic.value=node.topic||"";
+        const memo=String(nodeNotes[node.id]||"");
+        els.memo.value=memo;
+        els.memoCount.textContent=memo.length.toLocaleString()+"자";
         const childCount=node.children?.length||0;
         els.meta.innerHTML=
           "<b>ID</b> "+String(node.id)+"<br>"+
-          "<b>Depth</b> "+String(node._data?.view?.abs_x!==undefined?"활성":"—")+"<br>"+
-          "<b>Children</b> "+childCount;
+          "<b>Children</b> "+childCount+"<br>"+
+          "<b>Memo</b> "+(memo.trim()?"작성됨":"없음");
       }
 
       function markDirty(label="수정됨"){
@@ -354,7 +380,7 @@
 
       function saveLocal(auto=false){
         try{
-          localStorage.setItem(STORAGE_KEY,JSON.stringify(currentData()));
+          localStorage.setItem(STORAGE_KEY,JSON.stringify(dataWithNotes()));
           localStorage.setItem(TITLE_KEY,els.title.value.trim()||"나의 마인드맵");
           dirty=false;
           els.saveState.textContent=auto?"자동 저장 완료":"저장 완료";
@@ -368,6 +394,7 @@
 
       function loadMap(data,message="마인드맵을 불러왔습니다."){
         try{
+          hydrateNotes(data);
           jm=jsMind.show(options,data);
           bindMindEvents();
           centerCanvas(false);
@@ -413,9 +440,16 @@
         markDirty("형제 노드 추가");
       }
 
+      function deleteNotesForTree(node){
+        if(!node) return;
+        delete nodeNotes[node.id];
+        (node.children||[]).forEach(deleteNotesForTree);
+      }
+
       function deleteNode(){
         const node=jm.get_selected_node();
         if(!node||node.id==="root"){toast("루트 노드는 삭제할 수 없습니다.","error");return;}
+        deleteNotesForTree(node);
         jm.remove_node(node.id);
         jm.select_node("root");
         markDirty("노드 삭제");
@@ -454,7 +488,10 @@
           searchMatches=[];searchIndex=-1;els.searchResult.textContent="검색어를 입력하세요.";return;
         }
         const nodes=flatten(currentData().data);
-        searchMatches=nodes.filter(n=>n.topic.toLocaleLowerCase("ko-KR").includes(q));
+        searchMatches=nodes.filter(n=>
+          n.topic.toLocaleLowerCase("ko-KR").includes(q) ||
+          n.memo.toLocaleLowerCase("ko-KR").includes(q)
+        );
         if(!searchMatches.length){
           searchIndex=-1;els.searchResult.textContent="일치하는 노드가 없습니다.";return;
         }
@@ -467,7 +504,7 @@
       }
 
       function exportJson(){
-        const payload=currentData();
+        const payload=dataWithNotes();
         payload.meta=payload.meta||{};
         payload.meta.name=els.title.value.trim()||"mindmap";
         const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
@@ -528,6 +565,20 @@
         if(node){jm.select_node(node.id);setStatus("선택 노드를 강조했습니다.");}
       });
       els.topic.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();applyTopic();}});
+      let memoTimer=null;
+      els.memo.addEventListener("input",()=>{
+        const node=jm.get_selected_node();
+        if(!node) return;
+        nodeNotes[node.id]=els.memo.value;
+        els.memoCount.textContent=els.memo.value.length.toLocaleString()+"자";
+        els.saveState.textContent="메모 수정 · 자동 저장 대기";
+        dirty=true;
+        clearTimeout(memoTimer);
+        memoTimer=setTimeout(()=>{
+          markDirty("메모 수정");
+          refreshInspector(jm.get_selected_node());
+        },450);
+      });
       els.title.addEventListener("change",()=>markDirty("문서 이름 변경"));
       $("zoomIn").addEventListener("click",()=>setZoom(zoom+.1));
       $("zoomOut").addEventListener("click",()=>setZoom(zoom-.1));

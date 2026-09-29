@@ -2,168 +2,592 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>정적 마인드맵</title>
-  <!-- jsMind CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/jsmind@0.4.8/style/jsmind.css" />
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#111827">
+  <meta name="description" content="브라우저에서 아이디어를 빠르게 정리하고 저장하는 인터랙티브 마인드맵 도구">
+  <title>Mind Map · MyCodeHive</title>
+  <link rel="stylesheet" href="https://unpkg.com/jsmind@0.4.8/style/jsmind.css">
   <style>
-    body { font-family: sans-serif; margin: 0; padding: 0; }
-    #jsmind_container { width: 100%; height: 85vh; background-color: #f0f0f0; }
-    #toolbar { padding: 10px; background: #fff; border-bottom: 1px solid #ddd; }
-    #toolbar button { margin-right: 5px; }
+    :root{
+      color-scheme:light;
+      --bg:#eef2f7;
+      --panel:#ffffff;
+      --panel-soft:#f7f9fc;
+      --line:#dde4ee;
+      --line-dark:#c9d2df;
+      --text:#182234;
+      --muted:#738096;
+      --brand:#3157d5;
+      --brand-soft:#e9eeff;
+      --green:#11865e;
+      --danger:#c94d55;
+      --shadow:0 18px 48px rgba(30,43,70,.10);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0}
+    body{
+      overflow:hidden;
+      font-family:Inter,Pretendard,"Noto Sans KR",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      color:var(--text);
+      background:var(--bg)
+    }
+    button,input{font:inherit;color:inherit}
+    button{cursor:pointer}
+    .app{height:100vh;display:flex;flex-direction:column;min-width:1040px}
+    .topbar{
+      height:60px;flex:0 0 60px;display:flex;align-items:center;gap:12px;padding:0 14px;
+      background:#121925;color:#fff;border-bottom:1px solid #283142
+    }
+    .back{
+      width:34px;height:34px;border:1px solid #364052;border-radius:9px;display:grid;place-items:center;
+      color:#d3dae6;text-decoration:none;background:#1c2432
+    }
+    .brand{display:flex;align-items:center;gap:10px}
+    .brand-mark{
+      width:34px;height:34px;border-radius:10px;display:grid;place-items:center;
+      background:linear-gradient(135deg,#3157d5,#7c69ef);font-size:17px
+    }
+    .brand strong{display:block;font-size:13px}.brand small{display:block;margin-top:1px;font-size:8px;color:#8f9aaf;letter-spacing:.1em}
+    .doc-name{
+      margin-left:10px;padding-left:14px;border-left:1px solid #313b4b;min-width:0
+    }
+    .doc-name input{
+      width:180px;border:0;outline:0;background:transparent;color:#e8edf6;font-size:11px;font-weight:750
+    }
+    .save-state{display:flex;align-items:center;gap:6px;margin-left:auto;color:#98a4b7;font-size:9px}
+    .save-state i{width:7px;height:7px;border-radius:50%;background:#4ad39c;box-shadow:0 0 0 4px rgba(74,211,156,.1)}
+    .top-actions{display:flex;gap:6px;margin-left:10px}
+    .top-btn{
+      border:1px solid #3a4557;border-radius:8px;background:#222b39;color:#e5eaf2;padding:8px 10px;font-size:9px
+    }
+    .top-btn:hover{background:#2b3545}
+    .top-btn.primary{background:#3157d5;border-color:#3157d5}
+    .workspace{flex:1;min-height:0;display:grid;grid-template-columns:220px minmax(560px,1fr) 270px}
+    .sidebar{background:var(--panel);overflow:hidden}
+    .left{border-right:1px solid var(--line);display:flex;flex-direction:column}
+    .right{border-left:1px solid var(--line);display:flex;flex-direction:column}
+    .section{padding:13px;border-bottom:1px solid var(--line)}
+    .section h2{margin:0 0 4px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#525f73}
+    .section p{margin:0;color:var(--muted);font-size:8px;line-height:1.5}
+    .tool-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
+    .tool{
+      min-height:58px;border:1px solid var(--line);border-radius:9px;background:#fff;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#596579;font-size:8px
+    }
+    .tool:hover{border-color:#aebdec;background:#f7f9ff;color:#3157d5}
+    .tool span{font-size:16px;font-weight:800}
+    .tool.wide{grid-column:1/-1;min-height:42px;flex-direction:row}
+    .tool.danger{color:var(--danger)}
+    .search-box{position:relative;margin-top:9px}
+    .search-box input{
+      width:100%;height:34px;padding:0 34px 0 10px;border:1px solid var(--line);border-radius:8px;outline:0;background:#fafbfd;font-size:10px
+    }
+    .search-box input:focus{border-color:#91a6eb;box-shadow:0 0 0 2px #edf1ff}
+    .search-box button{
+      position:absolute;right:4px;top:4px;width:26px;height:26px;border:0;border-radius:6px;background:#eef2f7;color:#6a7587;font-size:10px
+    }
+    .search-result{margin-top:6px;min-height:16px;color:#7b8697;font-size:8px}
+    .shortcuts{margin-top:auto;padding:12px;color:#7c8798;font-size:8px;line-height:1.6;background:#fafbfd;border-top:1px solid var(--line)}
+    .shortcuts b{display:block;margin-bottom:5px;color:#586477}
+    .shortcuts kbd{display:inline-grid;place-items:center;min-width:20px;height:18px;padding:0 4px;border:1px solid #d2d9e3;border-bottom-width:2px;border-radius:4px;background:#fff;color:#5e697a;font-size:7px}
+    .editor{min-width:0;min-height:0;display:flex;flex-direction:column;background:#dde3eb}
+    .canvas-toolbar{
+      height:42px;flex:0 0 42px;display:flex;align-items:center;justify-content:space-between;gap:10px;
+      padding:0 10px;background:#f9fafc;border-bottom:1px solid var(--line)
+    }
+    .canvas-info{display:flex;align-items:center;gap:8px;color:#697588;font-size:9px}
+    .selected-chip{padding:4px 7px;border-radius:999px;background:var(--brand-soft);color:var(--brand);font-weight:800;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .canvas-actions{display:flex;align-items:center;gap:4px}
+    .canvas-actions button{
+      border:1px solid var(--line);background:#fff;border-radius:6px;height:28px;padding:0 8px;color:#5d6879;font-size:8px
+    }
+    .zoom-label{min-width:40px;text-align:center;color:#667286;font-size:8px}
+    .canvas-scroll{
+      flex:1;min-height:0;overflow:auto;position:relative;cursor:grab;
+      background-color:#edf1f6;
+      background-image:radial-gradient(#cbd3df 1px,transparent 1px);
+      background-size:20px 20px
+    }
+    .canvas-scroll.panning{cursor:grabbing;user-select:none}
+    .canvas-stage{
+      width:1800px;height:1100px;position:relative;transform-origin:50% 50%;
+      transition:transform .15s ease
+    }
+    #jsmind_container{width:1800px;height:1100px;background:transparent}
+    #jsmind_container jmnode{
+      border-radius:9px!important;
+      padding:8px 11px!important;
+      font-family:inherit!important;
+      font-size:12px!important;
+      box-shadow:0 6px 16px rgba(29,42,70,.10)!important;
+      transition:transform .13s ease,box-shadow .13s ease!important
+    }
+    #jsmind_container jmnode:hover{transform:translateY(-1px)!important;box-shadow:0 10px 22px rgba(29,42,70,.14)!important}
+    #jsmind_container jmnode.selected{outline:3px solid rgba(49,87,213,.18)!important;outline-offset:3px!important}
+    #jsmind_container jmnode.root{padding:11px 15px!important;font-size:14px!important}
+    .statusbar{
+      height:27px;flex:0 0 27px;display:flex;align-items:center;justify-content:space-between;
+      padding:0 10px;background:#fafbfd;border-top:1px solid var(--line);color:#7b8798;font-size:8px
+    }
+    .inspector-head{padding:13px;border-bottom:1px solid var(--line)}
+    .inspector-head h2{margin:0 0 3px;font-size:11px}.inspector-head p{margin:0;color:var(--muted);font-size:8px}
+    .inspector-body{padding:13px;overflow:auto;flex:1}
+    .empty-inspector{
+      padding:20px 12px;border:1px dashed #d2dae5;border-radius:10px;text-align:center;color:#8994a5;font-size:9px;line-height:1.5
+    }
+    .field{display:block;margin-bottom:12px;color:#667286;font-size:8px}
+    .field input{
+      width:100%;margin-top:5px;height:34px;padding:0 9px;border:1px solid var(--line);border-radius:7px;background:#fbfcfd;outline:0;font-size:10px
+    }
+    .field input:focus{border-color:#91a6eb;box-shadow:0 0 0 2px #edf1ff}
+    .inspector-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+    .inspector-actions button{
+      border:1px solid var(--line);border-radius:7px;background:#fff;padding:8px;font-size:8px;color:#596579
+    }
+    .inspector-actions .primary{background:#3157d5;border-color:#3157d5;color:#fff}
+    .node-meta{margin-top:14px;padding:10px;border-radius:9px;background:#f7f9fc;color:#748095;font-size:8px;line-height:1.6}
+    .toast-root{position:fixed;right:14px;bottom:14px;z-index:999;display:grid;gap:7px}
+    .toast{min-width:240px;max-width:360px;padding:10px 12px;border-radius:8px;background:#202a39;color:#fff;font-size:9px;box-shadow:var(--shadow)}
+    .toast.ok{background:#1c664f}.toast.error{background:#753239}
+    @media(max-width:1180px){.workspace{grid-template-columns:190px minmax(520px,1fr) 240px}}
   </style>
 </head>
 <body>
-  <div id="toolbar">
-    <button id="btn_add_child">자식 노드 추가</button>
-    <button id="btn_add_sibling">형제 노드 추가</button>
-    <button id="btn_del_node">노드 삭제</button>
-    <button id="btn_save">저장</button>
-    <button id="btn_load">불러오기</button>
-    <button id="btn_export">내보내기</button>
-    <button id="btn_import">가져오기</button>
-    <input type="file" id="file_input" style="display:none" />
-  </div>
-  <div id="jsmind_container"></div>
+  <div class="app">
+    <header class="topbar">
+      <a class="back" href="../" aria-label="App Launcher로 돌아가기">←</a>
+      <div class="brand">
+        <div class="brand-mark">🧠</div>
+        <div><strong>Mind Map</strong><small>IDEA WORKSPACE</small></div>
+      </div>
+      <div class="doc-name"><input id="mapTitle" value="나의 마인드맵" aria-label="마인드맵 이름"></div>
+      <div class="save-state"><i></i><span id="saveState">자동 저장 준비</span></div>
+      <div class="top-actions">
+        <button id="btn_new" class="top-btn">새로 만들기</button>
+        <button id="btn_import" class="top-btn">가져오기</button>
+        <button id="btn_export" class="top-btn primary">내보내기</button>
+        <input type="file" id="file_input" accept=".json,application/json" hidden>
+      </div>
+    </header>
 
-  <!-- jsMind library -->
+    <main class="workspace">
+      <aside class="sidebar left">
+        <section class="section">
+          <h2>노드</h2>
+          <p>선택한 노드를 기준으로 구조를 확장합니다.</p>
+          <div class="tool-grid">
+            <button id="btn_add_child" class="tool"><span>＋</span>자식 추가</button>
+            <button id="btn_add_sibling" class="tool"><span>↳</span>형제 추가</button>
+            <button id="btn_rename" class="tool"><span>✎</span>이름 변경</button>
+            <button id="btn_del_node" class="tool danger"><span>⌫</span>노드 삭제</button>
+            <button id="btn_toggle" class="tool wide"><span>↕</span>하위 노드 접기 / 펼치기</button>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>검색</h2>
+          <p>노드 제목에서 키워드를 찾아 선택합니다.</p>
+          <div class="search-box">
+            <input id="nodeSearch" type="search" placeholder="노드 검색">
+            <button id="btn_search" type="button">⌕</button>
+          </div>
+          <div id="searchResult" class="search-result">검색어를 입력하세요.</div>
+        </section>
+
+        <section class="section">
+          <h2>저장</h2>
+          <p>현재 브라우저에 저장하거나 다시 불러옵니다.</p>
+          <div class="tool-grid">
+            <button id="btn_save" class="tool"><span>↓</span>저장</button>
+            <button id="btn_load" class="tool"><span>↥</span>불러오기</button>
+          </div>
+        </section>
+
+        <div class="shortcuts">
+          <b>Keyboard</b>
+          <div><kbd>Tab</kbd> 자식 추가 · <kbd>Enter</kbd> 형제 추가</div>
+          <div><kbd>F2</kbd> 이름 변경 · <kbd>Del</kbd> 삭제</div>
+          <div><kbd>Ctrl</kbd> + <kbd>S</kbd> 저장 · <kbd>/</kbd> 검색</div>
+        </div>
+      </aside>
+
+      <section class="editor">
+        <div class="canvas-toolbar">
+          <div class="canvas-info">
+            <span id="nodeCount">1 node</span>
+            <span id="selectedChip" class="selected-chip">중심 아이디어</span>
+          </div>
+          <div class="canvas-actions">
+            <button id="zoomOut" type="button">−</button>
+            <span id="zoomLabel" class="zoom-label">100%</span>
+            <button id="zoomIn" type="button">＋</button>
+            <button id="centerView" type="button">중앙 정렬</button>
+          </div>
+        </div>
+
+        <div id="canvasScroll" class="canvas-scroll">
+          <div id="canvasStage" class="canvas-stage">
+            <div id="jsmind_container"></div>
+          </div>
+        </div>
+
+        <div class="statusbar">
+          <span id="statusText">노드를 선택하고 아이디어를 확장하세요.</span>
+          <span>배경을 드래그해 이동 · 마우스 휠로 스크롤</span>
+        </div>
+      </section>
+
+      <aside class="sidebar right">
+        <div class="inspector-head">
+          <h2>선택 노드</h2>
+          <p>선택한 노드의 내용을 빠르게 수정합니다.</p>
+        </div>
+        <div class="inspector-body">
+          <div id="emptyInspector" class="empty-inspector">캔버스에서 노드를 선택하세요.</div>
+          <div id="nodeInspector" hidden>
+            <label class="field">노드 제목
+              <input id="nodeTopic" type="text" placeholder="노드 제목">
+            </label>
+            <div class="inspector-actions">
+              <button id="applyTopic" class="primary" type="button">적용</button>
+              <button id="focusNode" type="button">선택 강조</button>
+            </div>
+            <div id="nodeMeta" class="node-meta"></div>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <div id="toastRoot" class="toast-root"></div>
+  </div>
+
   <script src="https://unpkg.com/jsmind@0.4.8/js/jsmind.js"></script>
   <script>
-    // 초기 마인드맵 데이터
-    const mind_data = {
-      meta: { name: "demo", author: "you", version: "1.0" },
-      format: "node_tree",
-      data: {
-        id: "root",
-        topic: "중심 아이디어",
-        children: []
-      }
-    };
+    (() => {
+      "use strict";
 
-    // 옵션
-    const options = {
-      container: 'jsmind_container',
-      editable: true,
-      view: { engine: 'canvas' }
-    };
-
-    // 인스턴스 생성
-    let jm = jsMind.show(options, mind_data);
-
-    // 노드 추가 헬퍼
-    function addChild() {
-      const node = jm.get_selected_node();
-      const parent_id = node ? node.id : 'root';
-      const new_id = parent_id + '_' + Date.now();
-      jm.add_node(parent_id, new_id, '새 노드');
-      jm.select_node(new_id);
-    }
-    function addSibling() {
-      const node = jm.get_selected_node();
-      if (!node || node.id === 'root') {
-        alert('루트의 형제 노드는 생성할 수 없습니다.');
-        return;
-      }
-      const parent_id = node.parent;
-      const new_id = parent_id + '_' + Date.now();
-      jm.add_node(parent_id, new_id, '새 노드');
-      jm.select_node(new_id);
-    }
-    function deleteNode() {
-      const node = jm.get_selected_node();
-      if (!node || node.id === 'root') {
-        alert('루트 노드는 삭제할 수 없습니다.');
-        return;
-      }
-      jm.remove_node(node.id);
-      jm.select_node('root');
-    }
-
-    // 이벤트 바인딩
-    document.getElementById('btn_add_child').addEventListener('click', addChild);
-    document.getElementById('btn_add_sibling').addEventListener('click', addSibling);
-    document.getElementById('btn_del_node').addEventListener('click', deleteNode);
-
-    // 저장/불러오기/내보내기/가져오기
-    document.getElementById('btn_save').addEventListener('click', () => {
-      localStorage.setItem('mymind', JSON.stringify(jm.get_data()));
-      alert('저장 완료');
-    });
-    document.getElementById('btn_load').addEventListener('click', () => {
-      const json = localStorage.getItem('mymind');
-      if (json) {
-        jm = jsMind.show(options, JSON.parse(json));
-        alert('불러오기 완료');
-      } else alert('저장된 데이터가 없습니다');
-    });
-    document.getElementById('btn_export').addEventListener('click', () => {
-      const blob = new Blob([JSON.stringify(jm.get_data())], { type: 'application/json' });
-      const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-      a.download = 'mindmap.json'; a.click();
-    });
-    document.getElementById('btn_import').addEventListener('click', () => {
-      document.getElementById('file_input').click();
-    });
-    document.getElementById('file_input').addEventListener('change', function() {
-      const file = this.files[0]; if (!file) return;
-      const reader = new FileReader();
-      reader.onload = e => {
-        jm = jsMind.show(options, JSON.parse(e.target.result));
+      const $ = id => document.getElementById(id);
+      const STORAGE_KEY = "mycodehive_mindmap_v2";
+      const TITLE_KEY = "mycodehive_mindmap_title";
+      const initialData = {
+        meta:{name:"mindmap",author:"MyCodeHive",version:"2.0"},
+        format:"node_tree",
+        data:{id:"root",topic:"중심 아이디어",children:[]}
       };
-      reader.readAsText(file);
-    });
-    // ===== [캔버스 드래그 이동(pan) 기능] : 컨테이너 전체 이동 =====
-    const container = document.getElementById('jsmind_container');
-    let isDragging = false;
-    let startX = 0, startY = 0;
-    let originX = 0, originY = 0;
+      const options = {
+        container:"jsmind_container",
+        editable:true,
+        theme:"primary",
+        view:{engine:"canvas",hmargin:160,vmargin:90,line_width:2,line_color:"#9aa9c2"}
+      };
 
-    function getCurrentTranslate() {
-    // 현재 transform 값 읽기 (컨테이너 기준)
-    const transform = container.style.transform || '';
-    const match = transform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/);
-    if (match) {
-        return { x: parseFloat(match[1]), y: parseFloat(match[2]) };
-    }
-    return { x: 0, y: 0 };
-    }
+      let jm = null;
+      let zoom = 1;
+      let dirty = false;
+      let autoSaveTimer = null;
+      let searchMatches = [];
+      let searchIndex = -1;
 
-    container.addEventListener('mousedown', function(e) {
-    // 노드 클릭 시, 이동 방지 (노드가 div라면)
-    if (e.target !== container) return;
-    if (e.button !== 0) return;
-    isDragging = true;
-    const { x, y } = getCurrentTranslate();
-    originX = x;
-    originY = y;
-    startX = e.clientX;
-    startY = e.clientY;
-    container.style.cursor = 'grabbing';
-    });
+      const els = {
+        title:$("mapTitle"), saveState:$("saveState"), status:$("statusText"),
+        count:$("nodeCount"), selectedChip:$("selectedChip"),
+        search:$("nodeSearch"), searchResult:$("searchResult"),
+        inspector:$("nodeInspector"), emptyInspector:$("emptyInspector"),
+        topic:$("nodeTopic"), meta:$("nodeMeta"),
+        canvasScroll:$("canvasScroll"), canvasStage:$("canvasStage"),
+        zoomLabel:$("zoomLabel"), fileInput:$("file_input"), toast:$("toastRoot")
+      };
 
-    window.addEventListener('mousemove', function(e) {
-    if (!isDragging) return;
-    const dx = e.clientX - startX;
-    const dy = e.clientY - startY;
-    container.style.transform = `translate(${originX + dx}px, ${originY + dy}px)`;
-    });
+      function toast(message,type=""){
+        const node=document.createElement("div");
+        node.className="toast "+type;
+        node.textContent=message;
+        els.toast.appendChild(node);
+        setTimeout(()=>node.remove(),2500);
+      }
 
-    window.addEventListener('mouseup', function(e) {
-    if (isDragging) {
-        isDragging = false;
-        container.style.cursor = 'default';
-    }
-    });
+      function setStatus(message){ els.status.textContent=message; }
 
-    container.addEventListener('mouseleave', function(e) {
-    if (isDragging) {
-        isDragging = false;
-        container.style.cursor = 'default';
-    }
-    });
+      function countNodes(tree){
+        if(!tree) return 0;
+        return 1+(tree.children||[]).reduce((sum,child)=>sum+countNodes(child),0);
+      }
 
-    // 초기 위치 설정 (중앙에서 시작, 필요에 따라 0,0으로)
-    container.style.transform = 'translate(0px, 0px)';
+      function flatten(tree,acc=[]){
+        if(!tree) return acc;
+        acc.push({id:tree.id,topic:String(tree.topic||"")});
+        (tree.children||[]).forEach(child=>flatten(child,acc));
+        return acc;
+      }
 
+      function currentData(){ return jm.get_data("node_tree"); }
+
+      function refreshStats(){
+        const data=currentData();
+        const count=countNodes(data.data);
+        els.count.textContent=count+" node"+(count===1?"":"s");
+        const node=jm.get_selected_node();
+        els.selectedChip.textContent=node?node.topic:"선택 없음";
+        refreshInspector(node);
+      }
+
+      function refreshInspector(node){
+        const has=!!node;
+        els.emptyInspector.hidden=has;
+        els.inspector.hidden=!has;
+        if(!has) return;
+        els.topic.value=node.topic||"";
+        const childCount=node.children?.length||0;
+        els.meta.innerHTML=
+          "<b>ID</b> "+String(node.id)+"<br>"+
+          "<b>Depth</b> "+String(node._data?.view?.abs_x!==undefined?"활성":"—")+"<br>"+
+          "<b>Children</b> "+childCount;
+      }
+
+      function markDirty(label="수정됨"){
+        dirty=true;
+        els.saveState.textContent=label+" · 자동 저장 대기";
+        clearTimeout(autoSaveTimer);
+        autoSaveTimer=setTimeout(()=>saveLocal(true),700);
+        refreshStats();
+      }
+
+      function saveLocal(auto=false){
+        try{
+          localStorage.setItem(STORAGE_KEY,JSON.stringify(currentData()));
+          localStorage.setItem(TITLE_KEY,els.title.value.trim()||"나의 마인드맵");
+          dirty=false;
+          els.saveState.textContent=auto?"자동 저장 완료":"저장 완료";
+          if(!auto) toast("브라우저에 저장했습니다.","ok");
+        }catch(error){
+          console.error(error);
+          els.saveState.textContent="저장 실패";
+          if(!auto) toast("저장에 실패했습니다.","error");
+        }
+      }
+
+      function loadMap(data,message="마인드맵을 불러왔습니다."){
+        try{
+          jm=jsMind.show(options,data);
+          bindMindEvents();
+          centerCanvas(false);
+          dirty=false;
+          refreshStats();
+          els.saveState.textContent="불러오기 완료";
+          setStatus(message);
+        }catch(error){
+          console.error(error);
+          toast("마인드맵 데이터를 읽을 수 없습니다.","error");
+        }
+      }
+
+      function loadLocal(){
+        const raw=localStorage.getItem(STORAGE_KEY);
+        if(!raw){toast("저장된 마인드맵이 없습니다.","error");return;}
+        try{
+          const data=JSON.parse(raw);
+          els.title.value=localStorage.getItem(TITLE_KEY)||"나의 마인드맵";
+          loadMap(data,"저장된 마인드맵을 불러왔습니다.");
+          toast("불러오기 완료","ok");
+        }catch(error){toast("저장 데이터가 손상되었습니다.","error");}
+      }
+
+      function addChild(){
+        const node=jm.get_selected_node()||jm.get_node("root");
+        const id="node_"+Date.now()+"_"+Math.random().toString(36).slice(2,5);
+        jm.add_node(node.id,id,"새 아이디어");
+        jm.select_node(id);
+        setTimeout(()=>{refreshStats();els.topic.focus();els.topic.select();},0);
+        markDirty("자식 노드 추가");
+      }
+
+      function addSibling(){
+        const node=jm.get_selected_node();
+        if(!node||node.id==="root"){toast("루트에는 형제 노드를 만들 수 없습니다.","error");return;}
+        const parentId=typeof node.parent==="string"?node.parent:node.parent?.id;
+        if(!parentId){toast("부모 노드를 찾을 수 없습니다.","error");return;}
+        const id="node_"+Date.now()+"_"+Math.random().toString(36).slice(2,5);
+        jm.add_node(parentId,id,"새 아이디어");
+        jm.select_node(id);
+        setTimeout(()=>{refreshStats();els.topic.focus();els.topic.select();},0);
+        markDirty("형제 노드 추가");
+      }
+
+      function deleteNode(){
+        const node=jm.get_selected_node();
+        if(!node||node.id==="root"){toast("루트 노드는 삭제할 수 없습니다.","error");return;}
+        jm.remove_node(node.id);
+        jm.select_node("root");
+        markDirty("노드 삭제");
+      }
+
+      function applyTopic(){
+        const node=jm.get_selected_node();
+        if(!node) return;
+        const topic=els.topic.value.trim();
+        if(!topic){toast("노드 제목을 입력하세요.","error");return;}
+        jm.update_node(node.id,topic);
+        refreshStats();
+        markDirty("노드 이름 변경");
+      }
+
+      function renameSelected(){
+        const node=jm.get_selected_node();
+        if(!node){toast("노드를 먼저 선택하세요.","error");return;}
+        refreshInspector(node);
+        els.topic.focus();
+        els.topic.select();
+      }
+
+      function toggleNode(){
+        const node=jm.get_selected_node();
+        if(!node){toast("노드를 먼저 선택하세요.","error");return;}
+        if(typeof jm.toggle_node==="function"){
+          jm.toggle_node(node.id);
+          markDirty("노드 접기/펼치기");
+        }else toast("현재 라이브러리에서 접기 기능을 지원하지 않습니다.","error");
+      }
+
+      function runSearch(){
+        const q=els.search.value.trim().toLocaleLowerCase("ko-KR");
+        if(!q){
+          searchMatches=[];searchIndex=-1;els.searchResult.textContent="검색어를 입력하세요.";return;
+        }
+        const nodes=flatten(currentData().data);
+        searchMatches=nodes.filter(n=>n.topic.toLocaleLowerCase("ko-KR").includes(q));
+        if(!searchMatches.length){
+          searchIndex=-1;els.searchResult.textContent="일치하는 노드가 없습니다.";return;
+        }
+        searchIndex=(searchIndex+1)%searchMatches.length;
+        const match=searchMatches[searchIndex];
+        jm.select_node(match.id);
+        refreshStats();
+        els.searchResult.textContent=(searchIndex+1)+" / "+searchMatches.length+" · "+match.topic;
+        setStatus("검색 결과를 선택했습니다.");
+      }
+
+      function exportJson(){
+        const payload=currentData();
+        payload.meta=payload.meta||{};
+        payload.meta.name=els.title.value.trim()||"mindmap";
+        const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
+        const url=URL.createObjectURL(blob);
+        const a=document.createElement("a");
+        a.href=url;
+        a.download=(els.title.value.trim()||"mindmap").replace(/[\\/:*?"<>|]+/g,"_")+".json";
+        document.body.appendChild(a);a.click();a.remove();
+        setTimeout(()=>URL.revokeObjectURL(url),1000);
+        toast("JSON으로 내보냈습니다.","ok");
+      }
+
+      function newMap(){
+        if(dirty&&!confirm("저장하지 않은 변경 내용이 있습니다. 새로 만들까요?")) return;
+        els.title.value="나의 마인드맵";
+        loadMap(structuredClone?structuredClone(initialData):JSON.parse(JSON.stringify(initialData)),"새 마인드맵을 만들었습니다.");
+        markDirty("새 마인드맵");
+      }
+
+      function setZoom(next){
+        zoom=Math.max(.55,Math.min(1.55,next));
+        els.canvasStage.style.transform="scale("+zoom+")";
+        els.zoomLabel.textContent=Math.round(zoom*100)+"%";
+      }
+
+      function centerCanvas(smooth=true){
+        requestAnimationFrame(()=>{
+          const x=(els.canvasScroll.scrollWidth-els.canvasScroll.clientWidth)/2;
+          const y=(els.canvasScroll.scrollHeight-els.canvasScroll.clientHeight)/2;
+          els.canvasScroll.scrollTo({left:x,top:y,behavior:smooth?"smooth":"auto"});
+        });
+      }
+
+      function bindMindEvents(){
+        const container=$("jsmind_container");
+        container.addEventListener("click",()=>setTimeout(refreshStats,0));
+        container.addEventListener("dblclick",()=>setTimeout(renameSelected,0));
+      }
+
+      $("btn_add_child").addEventListener("click",addChild);
+      $("btn_add_sibling").addEventListener("click",addSibling);
+      $("btn_del_node").addEventListener("click",deleteNode);
+      $("btn_rename").addEventListener("click",renameSelected);
+      $("btn_toggle").addEventListener("click",toggleNode);
+      $("btn_save").addEventListener("click",()=>saveLocal(false));
+      $("btn_load").addEventListener("click",loadLocal);
+      $("btn_new").addEventListener("click",newMap);
+      $("btn_export").addEventListener("click",exportJson);
+      $("btn_import").addEventListener("click",()=>els.fileInput.click());
+      $("btn_search").addEventListener("click",runSearch);
+      els.search.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();runSearch();}});
+      $("applyTopic").addEventListener("click",applyTopic);
+      $("focusNode").addEventListener("click",()=>{
+        const node=jm.get_selected_node();
+        if(node){jm.select_node(node.id);setStatus("선택 노드를 강조했습니다.");}
+      });
+      els.topic.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();applyTopic();}});
+      els.title.addEventListener("change",()=>markDirty("문서 이름 변경"));
+      $("zoomIn").addEventListener("click",()=>setZoom(zoom+.1));
+      $("zoomOut").addEventListener("click",()=>setZoom(zoom-.1));
+      $("centerView").addEventListener("click",()=>centerCanvas());
+
+      els.fileInput.addEventListener("change",function(){
+        const file=this.files?.[0];
+        if(!file) return;
+        const reader=new FileReader();
+        reader.onload=e=>{
+          try{
+            const data=JSON.parse(String(e.target.result));
+            if(!data||!data.data) throw new Error("invalid");
+            loadMap(data,"가져온 마인드맵을 표시했습니다.");
+            markDirty("JSON 가져오기");
+            toast("가져오기 완료","ok");
+          }catch(error){toast("올바른 마인드맵 JSON 파일이 아닙니다.","error");}
+        };
+        reader.readAsText(file);
+        this.value="";
+      });
+
+      let panning=false,startX=0,startY=0,startLeft=0,startTop=0;
+      els.canvasScroll.addEventListener("pointerdown",e=>{
+        if(e.button!==0) return;
+        const target=e.target;
+        if(target.closest&&target.closest("jmnode")) return;
+        panning=true;startX=e.clientX;startY=e.clientY;startLeft=els.canvasScroll.scrollLeft;startTop=els.canvasScroll.scrollTop;
+        els.canvasScroll.classList.add("panning");
+        els.canvasScroll.setPointerCapture?.(e.pointerId);
+      });
+      els.canvasScroll.addEventListener("pointermove",e=>{
+        if(!panning) return;
+        els.canvasScroll.scrollLeft=startLeft-(e.clientX-startX);
+        els.canvasScroll.scrollTop=startTop-(e.clientY-startY);
+      });
+      const endPan=()=>{panning=false;els.canvasScroll.classList.remove("panning");};
+      els.canvasScroll.addEventListener("pointerup",endPan);
+      els.canvasScroll.addEventListener("pointercancel",endPan);
+
+      window.addEventListener("keydown",e=>{
+        const tag=document.activeElement?.tagName;
+        const typing=["INPUT","TEXTAREA","SELECT"].includes(tag);
+        const mod=e.ctrlKey||e.metaKey;
+        if(mod&&e.key.toLowerCase()==="s"){e.preventDefault();saveLocal(false);return;}
+        if(!typing&&e.key==="/"){e.preventDefault();els.search.focus();return;}
+        if(typing) return;
+        if(e.key==="Tab"){e.preventDefault();addChild();}
+        else if(e.key==="Enter"){e.preventDefault();addSibling();}
+        else if(e.key==="F2"){e.preventDefault();renameSelected();}
+        else if(e.key==="Delete"){e.preventDefault();deleteNode();}
+      });
+
+      const saved=localStorage.getItem(STORAGE_KEY);
+      els.title.value=localStorage.getItem(TITLE_KEY)||"나의 마인드맵";
+      if(saved){
+        try{loadMap(JSON.parse(saved),"자동 저장된 마인드맵을 불러왔습니다.");}
+        catch{loadMap(initialData);}
+      }else loadMap(initialData);
+      setZoom(1);
+      centerCanvas(false);
+      setTimeout(()=>{jm.select_node("root");refreshStats();},60);
+    })();
   </script>
 </body>
 </html>

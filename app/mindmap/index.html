@@ -483,7 +483,8 @@
       function newMap(){
         if(dirty&&!confirm("저장하지 않은 변경 내용이 있습니다. 새로 만들까요?")) return;
         els.title.value="나의 마인드맵";
-        loadMap(structuredClone?structuredClone(initialData):JSON.parse(JSON.stringify(initialData)),"새 마인드맵을 만들었습니다.");
+        const fresh=typeof structuredClone==="function"?structuredClone(initialData):JSON.parse(JSON.stringify(initialData));
+        loadMap(fresh,"새 마인드맵을 만들었습니다.");
         markDirty("새 마인드맵");
       }
 
@@ -503,6 +504,8 @@
 
       function bindMindEvents(){
         const container=$("jsmind_container");
+        if(container.dataset.mindEventsBound==="true") return;
+        container.dataset.mindEventsBound="true";
         container.addEventListener("click",()=>setTimeout(refreshStats,0));
         container.addEventListener("dblclick",()=>setTimeout(renameSelected,0));
       }

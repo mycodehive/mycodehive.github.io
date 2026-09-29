@@ -3,32 +3,408 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Application Launcher</title>
-  <meta name="description" content="mycodehive의 웹 도구와 실험 프로젝트를 /app/에서 실행하는 런치페이지입니다." />
+  <meta name="theme-color" content="#10182f" />
+  <meta name="description" content="MyCodeHive에서 만든 웹 도구와 실험 프로젝트를 카테고리와 검색으로 빠르게 실행하는 App Launcher입니다." />
+  <title>Application Launcher · MyCodeHive</title>
   <style>
-    :root{--bg:#f5f7fb;--surface:#ffffff;--surface-soft:#eef2f7;--text:#182033;--muted:#667085;--line:#e1e7ef;--brand:#3157d5;--brand-dark:#1f3ca6;--shadow:0 18px 42px rgba(30,42,75,.08);--radius:22px}
-    *{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;color:var(--text);background:radial-gradient(circle at top left,rgba(49,87,213,.12),transparent 34rem),radial-gradient(circle at top right,rgba(16,185,129,.08),transparent 28rem),var(--bg)}a{color:inherit;text-decoration:none}.shell{width:min(1180px,calc(100% - 32px));margin:0 auto;padding:44px 0 72px}.hero{padding:38px;border-radius:30px;background:linear-gradient(135deg,#16234c,#3157d5 58%,#10b981);color:#fff;box-shadow:var(--shadow);overflow:hidden;position:relative}.hero:after{content:"";position:absolute;width:280px;height:280px;border-radius:50%;right:-90px;top:-110px;background:rgba(255,255,255,.12)}.eyebrow{font-size:12px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;opacity:.78}h1{font-size:clamp(36px,6vw,64px);line-height:1.04;margin:10px 0 14px;letter-spacing:-.05em}.hero p{max-width:760px;margin:0;color:rgba(255,255,255,.82);font-size:17px;line-height:1.7}.section-head{display:flex;justify-content:space-between;gap:16px;align-items:end;margin:34px 0 16px}.section-head h2{margin:0;font-size:24px;letter-spacing:-.03em}.section-head p{margin:0;color:var(--muted);font-size:14px}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.card{display:flex;flex-direction:column;min-height:220px;background:rgba(255,255,255,.92);border:1px solid var(--line);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow);transition:.18s ease}.card:hover{transform:translateY(-3px);border-color:#cbd6f6;box-shadow:0 22px 48px rgba(30,42,75,.12)}.icon{width:46px;height:46px;border-radius:14px;background:var(--surface-soft);display:grid;place-items:center;font-size:24px;margin-bottom:18px}.card h3{margin:0 0 8px;font-size:19px;letter-spacing:-.025em}.card p{margin:0;color:var(--muted);font-size:14px;line-height:1.65;flex:1}.meta{margin-top:18px;display:flex;justify-content:space-between;gap:12px;align-items:center;font-size:12px;color:var(--muted)}.open{font-weight:800;color:var(--brand)}.note{margin-top:28px;padding:18px 20px;border-radius:16px;background:#fff;border:1px solid var(--line);color:var(--muted);font-size:13px;line-height:1.65}footer{margin-top:28px;text-align:center;color:var(--muted);font-size:12px}@media(max-width:900px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:620px){.shell{width:min(100% - 22px,1180px);padding:18px 0 44px}.hero{padding:28px 22px;border-radius:22px}.grid{grid-template-columns:1fr}.section-head{display:block}.section-head p{margin-top:6px}}
+    :root{
+      --bg:#f4f7fb;
+      --surface:rgba(255,255,255,.88);
+      --surface-solid:#fff;
+      --surface-soft:#edf2f8;
+      --text:#172033;
+      --muted:#6b7689;
+      --line:#dde5ef;
+      --brand:#3157d5;
+      --brand-dark:#1d3caa;
+      --green:#10a772;
+      --hero-a:#10182f;
+      --hero-b:#2648b9;
+      --hero-c:#0b8f72;
+      --shadow:0 18px 50px rgba(35,50,82,.09);
+      --radius:24px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at 6% 0%,rgba(49,87,213,.12),transparent 32rem),
+        radial-gradient(circle at 94% 4%,rgba(16,167,114,.10),transparent 28rem),
+        var(--bg);
+    }
+    a{color:inherit;text-decoration:none}
+    button,input{font:inherit}
+    button{cursor:pointer}
+    .shell{width:min(1180px,calc(100% - 32px));margin:0 auto;padding:24px 0 72px}
+    .mini-nav{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:14px}
+    .brand-link{display:flex;align-items:center;gap:9px;font-size:12px;font-weight:850;letter-spacing:-.02em;color:#455268}
+    .brand-mark{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:#fff;border:1px solid var(--line);box-shadow:0 5px 14px rgba(35,50,82,.05)}
+    .nav-note{font-size:10px;color:#8993a4}
+    .hero{
+      --mx:78%;
+      --my:20%;
+      position:relative;
+      overflow:hidden;
+      min-height:330px;
+      padding:clamp(28px,5vw,54px);
+      border-radius:32px;
+      color:#fff;
+      background:
+        radial-gradient(circle at var(--mx) var(--my),rgba(255,255,255,.18),transparent 19rem),
+        linear-gradient(135deg,var(--hero-a),var(--hero-b) 58%,var(--hero-c));
+      box-shadow:0 28px 65px rgba(31,48,92,.18);
+      isolation:isolate;
+    }
+    .hero:before,.hero:after{content:"";position:absolute;border-radius:50%;pointer-events:none;z-index:-1}
+    .hero:before{width:280px;height:280px;right:-80px;top:-120px;border:1px solid rgba(255,255,255,.16);box-shadow:0 0 0 46px rgba(255,255,255,.035),0 0 0 92px rgba(255,255,255,.025)}
+    .hero:after{width:180px;height:180px;left:46%;bottom:-125px;background:rgba(255,255,255,.055);filter:blur(2px)}
+    .hero-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:32px;align-items:end}
+    .eyebrow{font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;opacity:.72}
+    h1{font-size:clamp(38px,6vw,68px);line-height:1.02;margin:10px 0 13px;letter-spacing:-.055em}
+    .hero-copy>p{max-width:700px;margin:0;color:rgba(255,255,255,.78);font-size:15px;line-height:1.7}
+    .hero-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:24px;max-width:520px}
+    .metric{padding:10px 12px;border-radius:13px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.11);backdrop-filter:blur(8px)}
+    .metric b{display:block;font-size:17px}.metric span{display:block;margin-top:2px;font-size:8px;color:rgba(255,255,255,.58)}
+    .hero-orbit{position:relative;min-height:210px;display:grid;place-items:center}
+    .orbit-core{width:106px;height:106px;border-radius:32px;display:grid;place-items:center;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(14px);font-size:42px;box-shadow:0 18px 40px rgba(0,0,0,.15);animation:float 5s ease-in-out infinite}
+    .orbit-chip{position:absolute;padding:7px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.15);background:rgba(9,18,43,.22);backdrop-filter:blur(10px);font-size:9px;font-weight:800;color:rgba(255,255,255,.8)}
+    .orbit-chip.c1{left:0;top:24px}.orbit-chip.c2{right:0;top:48px}.orbit-chip.c3{left:22px;bottom:18px}.orbit-chip.c4{right:10px;bottom:28px}
+    @keyframes float{50%{transform:translateY(-8px) rotate(2deg)}}
+    .search-wrap{position:relative;margin:-26px auto 0;width:min(840px,calc(100% - 36px));z-index:3}
+    .search-box{
+      display:grid;grid-template-columns:24px minmax(0,1fr) auto auto;align-items:center;gap:10px;
+      min-height:64px;padding:8px 10px 8px 18px;border:1px solid rgba(210,220,234,.9);border-radius:19px;
+      background:rgba(255,255,255,.94);backdrop-filter:blur(16px);box-shadow:0 18px 44px rgba(36,50,78,.14)
+    }
+    .search-icon{font-size:17px;color:#7a8598}
+    #appSearch{width:100%;border:0;outline:0;background:transparent;color:var(--text);font-size:15px;min-width:0}
+    #appSearch::placeholder{color:#9ba5b5}
+    .clear-search{border:0;background:transparent;color:#8590a2;width:34px;height:34px;border-radius:9px;font-size:18px}
+    .clear-search:hover{background:#f0f3f8;color:#4b5769}
+    .shortcut{display:flex;align-items:center;gap:3px;color:#8b96a7;font-size:8px;white-space:nowrap;padding-right:3px}
+    kbd{min-width:22px;height:22px;padding:0 5px;display:grid;place-items:center;border:1px solid #d7dee8;border-bottom-width:2px;border-radius:6px;background:#f7f9fc;color:#687386;font-size:8px}
+    .content-head{display:flex;align-items:end;justify-content:space-between;gap:16px;margin:44px 0 14px}
+    .content-head h2{margin:0;font-size:23px;letter-spacing:-.035em}
+    .content-head p{margin:5px 0 0;color:var(--muted);font-size:12px}
+    .result-pill{padding:7px 10px;border-radius:999px;background:#fff;border:1px solid var(--line);color:#667287;font-size:9px;white-space:nowrap}
+    .tabs{display:flex;gap:7px;flex-wrap:wrap;width:100%;padding:6px;margin:0 0 16px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.72);box-shadow:0 8px 24px rgba(30,42,75,.04);backdrop-filter:blur(12px)}
+    .tab{flex:1 1 120px;border:0;background:transparent;color:var(--muted);padding:10px 12px;border-radius:11px;font-size:11px;font-weight:800;white-space:nowrap;transition:.16s ease}
+    .tab:hover{background:#f0f4f9;color:var(--text)}
+    .tab.active{background:var(--brand);color:#fff;box-shadow:0 7px 16px rgba(49,87,213,.18)}
+    .tab-count{margin-left:5px;font-size:9px;opacity:.7}
+    .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;perspective:1100px}
+    .card{
+      --rx:0deg;--ry:0deg;--px:50%;--py:50%;
+      position:relative;overflow:hidden;display:flex;flex-direction:column;min-height:232px;padding:21px;
+      border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);box-shadow:var(--shadow);
+      transform:translateY(0) rotateX(var(--rx)) rotateY(var(--ry));transform-style:preserve-3d;
+      transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease,opacity .18s ease;
+      animation:cardIn .28s ease both;
+    }
+    .card:before{
+      content:"";position:absolute;inset:0;pointer-events:none;opacity:0;
+      background:radial-gradient(circle at var(--px) var(--py),rgba(49,87,213,.13),transparent 42%);
+      transition:opacity .18s ease
+    }
+    .card:hover{border-color:#bccaf2;box-shadow:0 24px 55px rgba(31,50,94,.13);transform:translateY(-4px) rotateX(var(--rx)) rotateY(var(--ry))}
+    .card:hover:before{opacity:1}
+    .card.is-hidden{display:none}
+    @keyframes cardIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    .card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;position:relative;z-index:1}
+    .icon{width:48px;height:48px;border-radius:15px;background:var(--surface-soft);display:grid;place-items:center;font-size:24px}
+    .category-badge{padding:5px 7px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.72);color:#7b8595;font-size:7px;font-weight:850}
+    .card h3{position:relative;z-index:1;margin:18px 0 7px;font-size:19px;letter-spacing:-.028em}
+    .card p{position:relative;z-index:1;margin:0;color:var(--muted);font-size:12px;line-height:1.7;flex:1}
+    .meta{position:relative;z-index:1;margin-top:18px;padding-top:14px;border-top:1px solid #edf1f5;display:flex;justify-content:space-between;gap:12px;align-items:center;font-size:9px;color:#8993a4}
+    .open{display:flex;align-items:center;gap:5px;font-weight:900;color:var(--brand);font-size:10px}
+    .open i{font-style:normal;transition:transform .16s ease}.card:hover .open i{transform:translateX(3px)}
+    .empty-state{display:none;padding:44px 20px;text-align:center;border:1px dashed #cfd8e5;border-radius:20px;background:rgba(255,255,255,.6);color:var(--muted)}
+    .empty-state.show{display:block}.empty-state b{display:block;color:var(--text);font-size:17px;margin-bottom:6px}
+    .empty-state button{margin-top:12px;border:0;border-radius:9px;background:var(--brand);color:#fff;padding:9px 13px;font-size:10px;font-weight:800}
+    .note{margin-top:24px;padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.7);color:#7d8798;font-size:9px;line-height:1.6}
+    footer{margin-top:26px;text-align:center;color:#8b95a6;font-size:9px}
+    @media(max-width:900px){.hero-grid{grid-template-columns:1fr 250px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:700px){.hero-grid{grid-template-columns:1fr}.hero-orbit{display:none}.hero{min-height:0}.search-wrap{margin-top:-20px}.shortcut{display:none}.tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}.tab{flex:0 0 auto}.grid{grid-template-columns:1fr}.content-head{align-items:flex-start;flex-direction:column}.result-pill{align-self:flex-start}}
+    @media(max-width:520px){.shell{width:min(100% - 20px,1180px);padding-top:14px}.mini-nav{margin-bottom:10px}.nav-note{display:none}.hero{padding:28px 22px;border-radius:24px}h1{font-size:42px}.hero-metrics{grid-template-columns:repeat(3,1fr)}.metric{padding:9px 8px}.search-wrap{width:calc(100% - 18px)}.search-box{min-height:58px;padding-left:14px}.card{min-height:210px}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.orbit-core,.card{animation:none!important}.card,.open i{transition:none!important}}
   </style>
 </head>
 <body>
   <main class="shell">
-    <section class="hero"><div class="eyebrow">MYCODEHIVE · APPLICATION HUB</div><h1>Application Launcher</h1><p>이 저장소에 만든 웹 도구, 실험용 앱, 라이딩·데이터 유틸리티를 한곳에서 실행하는 관문입니다. 각 카드를 눌러 바로 이동할 수 있습니다.</p></section>
-    <div class="section-head"><div><h2>Apps & Tools</h2><p>실제로 실행 가능한 하위 프로젝트 중심으로 정리했습니다.</p></div></div>
-    <section class="grid">
-      <a class="card" href="./gpx-edit/"><div class="icon">✂️</div><h3>GPX Studio</h3><p>GPX 기록의 앞뒤 구간 자르기, 잘못된 경로 삭제, 트랙 분할, 웨이포인트 편집과 GPX 1.1 재다운로드를 브라우저에서 처리하는 편집기입니다.</p><div class="meta"><span>gpx-edit</span><span class="open">열기 →</span></div></a>
-      <a class="card" href="./movedit/"><div class="icon">🎬</div><h3>MovEdit</h3><p>영상 자르기·분할·이어붙이기, 이미지·영상 오버레이, 자막, 전환 효과, 오디오 분리와 MP4 렌더링을 브라우저에서 처리하는 간단한 동영상 편집기입니다.</p><div class="meta"><span>movedit</span><span class="open">열기 →</span></div></a>
-      <a class="card" href="./htmledit/"><div class="icon">📝</div><h3>HTML Edit</h3><p>HTML 파일을 불러와 소스코드 대신 화면 요소를 직접 클릭하며 텍스트·속성·스타일·이미지를 수정하고 새 요소를 추가한 뒤 HTML로 저장하는 비주얼 편집기입니다.</p><div class="meta"><span>htmledit</span><span class="open">열기 →</span></div></a>
-      <a class="card" href="./editpdf/"><div class="icon">📄</div><h3>EditPDF</h3><p>PDF 페이지 재정렬·회전·삭제부터 텍스트, 이미지, 서명, 형광펜, 도형, 자유 그리기까지 브라우저에서 편집하고 새 PDF로 저장하는 도구입니다.</p><div class="meta"><span>editpdf</span><span class="open">열기 →</span></div></a>
-      <a class="card" href="./magic-qr-tree/"><div class="icon">🌳</div><h3>Magic QR Tree</h3><p>URL을 QR 코드로 생성하고 3D 나무와 지형으로 시각화하는 인터랙티브 WebGL 앱입니다. 계절 변경, 회전·줌, QR 스캔 뷰와 공유 링크를 지원합니다.</p><div class="meta"><span>magic-qr-tree</span><span class="open">열기 →</span></div></a>
-      <a class="card" href="./bicycle_transport/"><div class="icon">🚇</div><h3>자전거 휴대승차 안내</h3><p>철도·도시철도·경전철별 자전거 휴대승차 가능 여부를 규정과 공지 기준으로 정리한 정보 페이지입니다.</p><div class="meta"><span>bicycle_transport</span><span class="open">열기 →</span></div></a>
-      <a class="card" href="./lotto/lotto.html"><div class="icon">🎱</div><h3>Lotto 6/45 Probability Lab</h3><p>로또 번호 조합과 확률 개념을 실험하고 시뮬레이션할 수 있도록 만든 확률 분석용 웹 도구입니다.</p><div class="meta"><span>lotto</span><span class="open">열기 →</span></div></a>
-      <a class="card" href="./mindmap/"><div class="icon">🧠</div><h3>Mind Map</h3><p>노드를 추가·삭제하고 저장, 불러오기, 가져오기, 내보내기를 지원하는 브라우저 기반 마인드맵 도구입니다.</p><div class="meta"><span>mindmap</span><span class="open">열기 →</span></div></a>
-      <a class="card" href="./convert/img2img.html"><div class="icon">🖼️</div><h3>WebP → PNG Converter</h3><p>여러 WebP 이미지를 브라우저에서 PNG 형식으로 변환하고 다운로드할 수 있는 간단한 이미지 변환 도구입니다.</p><div class="meta"><span>convert</span><span class="open">열기 →</span></div></a>
-      <a class="card" href="./dice/ver2/"><div class="icon">🎲</div><h3>Dice Roller</h3><p>1~6 사이의 주사위 값을 무작위로 생성하는 웹앱입니다. 현재는 개선된 ver2를 기본 진입점으로 연결했습니다.</p><div class="meta"><span>dice / ver2</span><span class="open">열기 →</span></div></a>
-      <a class="card" href="./myactivity/150km.html"><div class="icon">🏁</div><h3>150km 라이딩 전략</h3><p>150km 장거리 라이딩을 구간별로 나누어 페이스와 운영 전략을 확인할 수 있도록 정리한 라이딩 플랜 페이지입니다.</p><div class="meta"><span>myactivity</span><span class="open">열기 →</span></div></a>
+    <header class="mini-nav">
+      <a class="brand-link" href="/"><span class="brand-mark">⌂</span><span>MyCodeHive / App</span></a>
+      <span class="nav-note">작게 만들고, 바로 쓰는 웹 도구 모음</span>
+    </header>
+
+    <section class="hero" id="hero">
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <div class="eyebrow">MYCODEHIVE · INTERACTIVE APP HUB</div>
+          <h1>필요한 도구를<br>바로 찾아 실행하세요.</h1>
+          <p>문서 편집부터 GPX, 영상, 변환 도구와 작은 실험까지. 검색하거나 카테고리를 선택하면 필요한 앱만 빠르게 좁혀집니다.</p>
+          <div class="hero-metrics" aria-label="런처 요약">
+            <div class="metric"><b>12</b><span>실행 가능한 앱</span></div>
+            <div class="metric"><b>5</b><span>대분류 카테고리</span></div>
+            <div class="metric"><b>Local</b><span>브라우저 중심 도구</span></div>
+          </div>
+        </div>
+        <div class="hero-orbit" aria-hidden="true">
+          <span class="orbit-chip c1">PDF</span>
+          <span class="orbit-chip c2">VIDEO</span>
+          <span class="orbit-chip c3">GPX</span>
+          <span class="orbit-chip c4">XLSX</span>
+          <div class="orbit-core">🧩</div>
+        </div>
+      </div>
     </section>
-    <div class="note"><strong>관리 메모:</strong> <code>adguard</code> 폴더는 현재 웹앱이 아니라 <code>allow.txt</code> 설정 파일만 있어 런처 카드에서 제외했습니다. 실행 가능한 페이지가 추가되면 이 런치페이지에 카드만 더하면 됩니다.</div>
+
+    <div class="search-wrap">
+      <div class="search-box">
+        <span class="search-icon">⌕</span>
+        <input id="appSearch" type="search" autocomplete="off" placeholder="앱 이름이나 기능을 검색하세요 · 예: PDF, GPX, 영상, 엑셀" aria-label="앱 검색">
+        <button id="clearSearch" class="clear-search" type="button" aria-label="검색어 지우기">×</button>
+        <span class="shortcut"><kbd>⌘</kbd><kbd>K</kbd></span>
+      </div>
+    </div>
+
+    <div class="content-head">
+      <div>
+        <h2>Apps & Tools</h2>
+        <p>카테고리와 검색을 함께 사용해 원하는 도구를 빠르게 찾을 수 있습니다.</p>
+      </div>
+      <div id="resultPill" class="result-pill" aria-live="polite">12개 앱 표시 중</div>
+    </div>
+
+    <nav class="tabs" role="tablist" aria-label="앱 카테고리">
+      <button class="tab active" type="button" role="tab" aria-selected="true" data-category="all">전체<span class="tab-count">12</span></button>
+      <button class="tab" type="button" role="tab" aria-selected="false" data-category="docs">문서·파일<span class="tab-count">4</span></button>
+      <button class="tab" type="button" role="tab" aria-selected="false" data-category="media">미디어·콘텐츠<span class="tab-count">2</span></button>
+      <button class="tab" type="button" role="tab" aria-selected="false" data-category="ride">라이딩·GPX<span class="tab-count">3</span></button>
+      <button class="tab" type="button" role="tab" aria-selected="false" data-category="productivity">생산성<span class="tab-count">1</span></button>
+      <button class="tab" type="button" role="tab" aria-selected="false" data-category="fun">재미·실험<span class="tab-count">2</span></button>
+    </nav>
+
+    <section class="grid" id="appGrid">
+      <a class="card" data-category="ride" data-search="gpx studio gpx 편집 경로 트랙 웨이포인트 라이딩" href="./gpx-edit/">
+        <div class="card-top"><div class="icon">✂️</div><span class="category-badge">라이딩·GPX</span></div>
+        <h3>GPX Studio</h3><p>GPX 기록 앞뒤 자르기, 잘못된 경로 삭제, 트랙 분할과 웨이포인트 편집을 브라우저에서 처리합니다.</p>
+        <div class="meta"><span>gpx-edit</span><span class="open">열기 <i>→</i></span></div>
+      </a>
+
+      <a class="card" data-category="media" data-search="movedit video 영상 편집 자막 transition overlay mp4 오디오" href="./movedit/">
+        <div class="card-top"><div class="icon">🎬</div><span class="category-badge">미디어·콘텐츠</span></div>
+        <h3>MovEdit</h3><p>영상 자르기·분할·이어붙이기, 오버레이, 자막, 전환 효과와 MP4 렌더링을 처리하는 영상 편집기입니다.</p>
+        <div class="meta"><span>movedit</span><span class="open">열기 <i>→</i></span></div>
+      </a>
+
+      <a class="card" data-category="docs" data-search="html edit 에디터 html 편집 텍스트 css js 웹페이지" href="./htmledit/">
+        <div class="card-top"><div class="icon">📝</div><span class="category-badge">문서·파일</span></div>
+        <h3>HTML Edit</h3><p>HTML 파일을 불러와 소스 대신 화면 요소를 직접 선택하며 텍스트·속성·스타일과 이미지를 수정합니다.</p>
+        <div class="meta"><span>htmledit</span><span class="open">열기 <i>→</i></span></div>
+      </a>
+
+      <a class="card" data-category="docs" data-search="editpdf pdf 편집 텍스트 이미지 서명 형광펜 페이지" href="./editpdf/">
+        <div class="card-top"><div class="icon">📄</div><span class="category-badge">문서·파일</span></div>
+        <h3>EditPDF</h3><p>PDF 페이지 재정렬·회전·삭제부터 텍스트, 이미지, 서명, 형광펜과 도형까지 브라우저에서 편집합니다.</p>
+        <div class="meta"><span>editpdf</span><span class="open">열기 <i>→</i></span></div>
+      </a>
+
+      <a class="card" data-category="media" data-search="magic qr tree qr 3d 나무 webgl 링크 공유" href="./magic-qr-tree/">
+        <div class="card-top"><div class="icon">🌳</div><span class="category-badge">미디어·콘텐츠</span></div>
+        <h3>Magic QR Tree</h3><p>URL을 QR 코드로 만들고 3D 나무와 지형으로 시각화하는 인터랙티브 WebGL 앱입니다.</p>
+        <div class="meta"><span>magic-qr-tree</span><span class="open">열기 <i>→</i></span></div>
+      </a>
+
+      <a class="card" data-category="ride" data-search="자전거 휴대승차 지하철 철도 도시철도 라이딩 transport bicycle" href="./bicycle_transport/">
+        <div class="card-top"><div class="icon">🚇</div><span class="category-badge">라이딩·GPX</span></div>
+        <h3>자전거 휴대승차 안내</h3><p>철도·도시철도·경전철별 자전거 휴대승차 가능 여부를 규정과 공지 기준으로 정리한 정보 페이지입니다.</p>
+        <div class="meta"><span>bicycle_transport</span><span class="open">열기 <i>→</i></span></div>
+      </a>
+
+      <a class="card" data-category="fun" data-search="lotto 로또 6 45 확률 probability 번호 simulation" href="./lotto/lotto.html">
+        <div class="card-top"><div class="icon">🎱</div><span class="category-badge">재미·실험</span></div>
+        <h3>Lotto 6/45 Probability Lab</h3><p>로또 번호 조합과 확률 개념을 직접 실험하고 시뮬레이션할 수 있는 확률 분석 웹 도구입니다.</p>
+        <div class="meta"><span>lotto</span><span class="open">열기 <i>→</i></span></div>
+      </a>
+
+      <a class="card" data-category="productivity" data-search="mind map 마인드맵 생각 아이디어 노드 생산성" href="./mindmap/">
+        <div class="card-top"><div class="icon">🧠</div><span class="category-badge">생산성</span></div>
+        <h3>Mind Map</h3><p>노드를 추가·삭제하고 저장, 불러오기, 가져오기와 내보내기를 지원하는 브라우저 기반 마인드맵입니다.</p>
+        <div class="meta"><span>mindmap</span><span class="open">열기 <i>→</i></span></div>
+      </a>
+
+      <a class="card" data-category="docs" data-search="webp png image convert 이미지 변환 포맷" href="./convert/img2img.html">
+        <div class="card-top"><div class="icon">🖼️</div><span class="category-badge">문서·파일</span></div>
+        <h3>WebP → PNG Converter</h3><p>여러 WebP 이미지를 브라우저에서 PNG 형식으로 변환하고 바로 다운로드할 수 있습니다.</p>
+        <div class="meta"><span>convert</span><span class="open">열기 <i>→</i></span></div>
+      </a>
+
+      <a class="card" data-category="docs" data-search="convxls xls xlsx excel 엑셀 변환 서식 format" href="./convxls/">
+        <div class="card-top"><div class="icon">📊</div><span class="category-badge">문서·파일</span></div>
+        <h3>ConvXLS</h3><p>Excel 97–2004 .xls 파일을 셀 서식과 병합, 행·열 크기와 수식을 최대한 유지하며 .xlsx로 변환합니다.</p>
+        <div class="meta"><span>convxls</span><span class="open">열기 <i>→</i></span></div>
+      </a>
+
+      <a class="card" data-category="fun" data-search="dice roller 주사위 3d random 랜덤 게임" href="./dice/ver2/">
+        <div class="card-top"><div class="icon">🎲</div><span class="category-badge">재미·실험</span></div>
+        <h3>Dice Roller</h3><p>CSS 3D 주사위를 역동적인 회전과 바운스 모션으로 굴리는 인터랙티브 주사위 앱입니다.</p>
+        <div class="meta"><span>dice / ver2</span><span class="open">열기 <i>→</i></span></div>
+      </a>
+
+      <a class="card" data-category="ride" data-search="150km 라이딩 전략 자전거 페이스 장거리 cycling" href="./myactivity/150km.html">
+        <div class="card-top"><div class="icon">🏁</div><span class="category-badge">라이딩·GPX</span></div>
+        <h3>150km 라이딩 전략</h3><p>150km 장거리 라이딩을 구간별로 나누어 페이스와 운영 전략을 확인할 수 있는 라이딩 플랜입니다.</p>
+        <div class="meta"><span>myactivity</span><span class="open">열기 <i>→</i></span></div>
+      </a>
+    </section>
+
+    <div id="emptyState" class="empty-state">
+      <b>조건에 맞는 앱이 없습니다.</b>
+      <span>검색어를 줄이거나 다른 카테고리를 선택해 보세요.</span>
+      <button id="resetFilter" type="button">전체 앱 보기</button>
+    </div>
+
+    <div class="note"><strong>관리 메모:</strong> <code>adguard</code>와 <code>toss</code>는 현재 실행형 웹앱이 아니므로 런처에서 제외되어 있습니다.</div>
     <footer>MyCodeHive · GitHub Pages Application Hub</footer>
   </main>
+
+  <script>
+    (() => {
+      if (window.__appLauncherInteractive) return;
+      window.__appLauncherInteractive = true;
+
+      const hero = document.getElementById("hero");
+      const search = document.getElementById("appSearch");
+      const clear = document.getElementById("clearSearch");
+      const tabs = [...document.querySelectorAll(".tab[data-category]")];
+      const cards = [...document.querySelectorAll(".card[data-category]")];
+      const resultPill = document.getElementById("resultPill");
+      const emptyState = document.getElementById("emptyState");
+      const resetFilter = document.getElementById("resetFilter");
+      const labels = {
+        all:"전체", docs:"문서·파일", media:"미디어·콘텐츠",
+        ride:"라이딩·GPX", productivity:"생산성", fun:"재미·실험"
+      };
+      let activeCategory = labels[location.hash.slice(1)] ? location.hash.slice(1) : "all";
+
+      function normalized(value){
+        return String(value || "").trim().toLocaleLowerCase("ko-KR");
+      }
+
+      function applyFilters(updateHash = false){
+        const q = normalized(search.value);
+        let visible = 0;
+
+        tabs.forEach(tab => {
+          const active = tab.dataset.category === activeCategory;
+          tab.classList.toggle("active", active);
+          tab.setAttribute("aria-selected", String(active));
+        });
+
+        cards.forEach((card,index) => {
+          const categoryMatch = activeCategory === "all" || card.dataset.category === activeCategory;
+          const haystack = normalized(card.dataset.search + " " + card.textContent);
+          const searchMatch = !q || haystack.includes(q);
+          const show = categoryMatch && searchMatch;
+          card.classList.toggle("is-hidden", !show);
+          if (show) {
+            visible++;
+            card.style.animationDelay = Math.min(index * 22, 150) + "ms";
+          }
+        });
+
+        const categoryText = activeCategory === "all" ? "전체" : labels[activeCategory];
+        resultPill.textContent = q
+          ? categoryText + " · 검색 결과 " + visible + "개"
+          : categoryText + " · " + visible + "개 앱";
+        emptyState.classList.toggle("show", visible === 0);
+
+        if(updateHash){
+          const hash = activeCategory === "all" ? "" : "#" + activeCategory;
+          history.replaceState(null,"",location.pathname + location.search + hash);
+        }
+      }
+
+      tabs.forEach(tab => tab.addEventListener("click", () => {
+        activeCategory = tab.dataset.category;
+        applyFilters(true);
+      }));
+
+      search.addEventListener("input", () => {
+        clear.style.visibility = search.value ? "visible" : "hidden";
+        applyFilters(false);
+      });
+
+      clear.addEventListener("click", () => {
+        search.value = "";
+        clear.style.visibility = "hidden";
+        search.focus();
+        applyFilters(false);
+      });
+
+      resetFilter.addEventListener("click", () => {
+        activeCategory = "all";
+        search.value = "";
+        clear.style.visibility = "hidden";
+        applyFilters(true);
+        search.focus();
+      });
+
+      window.addEventListener("hashchange", () => {
+        const next = location.hash.slice(1);
+        activeCategory = labels[next] ? next : "all";
+        applyFilters(false);
+      });
+
+      window.addEventListener("keydown", event => {
+        const tag = document.activeElement?.tagName;
+        const editable = ["INPUT","TEXTAREA","SELECT"].includes(tag);
+        if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+          event.preventDefault();
+          search.focus();
+          search.select();
+        } else if (!editable && event.key === "/") {
+          event.preventDefault();
+          search.focus();
+        } else if (event.key === "Escape" && document.activeElement === search) {
+          search.value = "";
+          clear.style.visibility = "hidden";
+          search.blur();
+          applyFilters(false);
+        }
+      });
+
+      if (matchMedia("(hover:hover) and (pointer:fine)").matches && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        hero.addEventListener("pointermove", event => {
+          const rect = hero.getBoundingClientRect();
+          hero.style.setProperty("--mx", ((event.clientX - rect.left) / rect.width * 100).toFixed(1) + "%");
+          hero.style.setProperty("--my", ((event.clientY - rect.top) / rect.height * 100).toFixed(1) + "%");
+        });
+
+        cards.forEach(card => {
+          card.addEventListener("pointermove", event => {
+            const rect = card.getBoundingClientRect();
+            const x = (event.clientX - rect.left) / rect.width;
+            const y = (event.clientY - rect.top) / rect.height;
+            card.style.setProperty("--px",(x*100).toFixed(1)+"%");
+            card.style.setProperty("--py",(y*100).toFixed(1)+"%");
+            card.style.setProperty("--ry",((x-.5)*5).toFixed(2)+"deg");
+            card.style.setProperty("--rx",((.5-y)*5).toFixed(2)+"deg");
+          });
+          card.addEventListener("pointerleave", () => {
+            card.style.setProperty("--rx","0deg");
+            card.style.setProperty("--ry","0deg");
+          });
+        });
+      }
+
+      clear.style.visibility = "hidden";
+      applyFilters(false);
+    })();
+  </script>
 </body>
 </html>
